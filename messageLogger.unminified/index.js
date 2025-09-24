@@ -77,30 +77,17 @@ var index = {
         if (!hasDeleted)
           return;
         hasShownAlert = true;
-        const children = res?.props?.children;
-        if (!children) {
-          toasts.showToast("No children found in ChannelHeader");
-          return;
-        }
-        const childrenArray = Array.isArray(children) ? children : [
-          children
-        ];
-        const propsSet = /* @__PURE__ */ new Set();
-        for (const child of childrenArray) {
-          if (child?.props) {
-            const keys = Object.keys(child.props);
-            if (keys.length > 0) {
-              propsSet.add(`[${keys.join(", ")}]`);
-            }
-          }
-        }
-        const propsString = Array.from(propsSet).join("\n");
+        const resKeys = Object.keys(res ?? {}).join(", ");
+        const propsKeys = Object.keys(res?.props ?? {}).join(", ");
+        const alertContent = `res keys: [${resKeys}]
+
+props keys: [${propsKeys}]`;
         alerts.showConfirmationAlert({
-          title: "Second Level Prop Keys",
-          content: propsString || "No 2nd-level components with props found.",
+          title: "Header Render Output",
+          content: alertContent,
           confirmText: "Copy",
           onConfirm: function() {
-            common.clipboard.setString(propsString);
+            common.clipboard.setString(alertContent);
             toasts.showToast("Copied to clipboard.");
           },
           cancelText: "Close"
