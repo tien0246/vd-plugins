@@ -89,7 +89,7 @@ function TrashButton({ channel }) {
     return (
         <TouchableOpacity
             onPress={handlePress}
-            style={{ position: 'absolute', right: 50, top: 8, zIndex: 1 }}
+            style={{ position: 'absolute', right: 16, top: 18, zIndex: 1 }}
         >
             <View style={styles.iconContainer}>
                 <Forms.FormIcon style={styles.icon} source={getAssetIDByName("ic_trash_24px")} />
