@@ -1,7 +1,7 @@
 import { findByName, findByProps } from "@vendetta/metro";
 import { constants, React } from "@vendetta/metro/common";
 import { instead, after } from "@vendetta/patcher";
-import { showToast } from "@vendetta/ui/toasts";
+import { logger } from "@vendetta";
 import HiddenChannel from "./HiddenChannel.jsx";
 
 let patches = [];
@@ -12,7 +12,7 @@ function isHidden(channelIdOrObject: any | undefined) {
     const Permissions = findByProps("getChannelPermissions", "can");
 
     if (!getChannel || !ChannelTypes || !Permissions) {
-        showToast("hidden-channels: Could not find core modules");
+        logger.error("hidden-channels: Could not find core modules for isHidden check.");
         return false;
     }
 
@@ -28,7 +28,6 @@ function isHidden(channelIdOrObject: any | undefined) {
 }
 
 function onLoad() {
-    showToast("hidden-channels: onLoad called (v1)");
     try {
         const Permissions = findByProps("getChannelPermissions", "can");
         if (Permissions) {
@@ -37,7 +36,7 @@ function onLoad() {
                 return res;
             }));
         } else {
-            showToast("hidden-channels: Failed to find Permissions module");
+            logger.error("hidden-channels: Failed to find Permissions module");
         }
 
         const Router = findByProps("transitionToGuild");
@@ -47,7 +46,7 @@ function onLoad() {
                 if (!isHidden(channel) && typeof orig === "function") orig(...args);
             }));
         } else {
-            showToast("hidden-channels: Failed to find Router module");
+            logger.error("hidden-channels: Failed to find Router module");
         }
 
         const Fetcher = findByProps("stores", "fetchMessages");
@@ -57,7 +56,7 @@ function onLoad() {
                 if (!isHidden(channelId) && typeof orig === "function") orig(...args);
             }));
         } else {
-            showToast("hidden-channels: Failed to find Fetcher module");
+            logger.error("hidden-channels: Failed to find Fetcher module");
         }
 
         const MessagesConnected = findByName("ChannelMessages", false);
@@ -68,10 +67,10 @@ function onLoad() {
                 else return React.createElement(HiddenChannel, {channel});
             }));
         } else {
-            showToast("hidden-channels: Failed to find MessagesConnected");
+            logger.error("hidden-channels: Failed to find ChannelMessages component");
         }
     } catch (e) {
-        showToast(`hidden-channels: onLoad error: ${e.message}`);
+        logger.error(`hidden-channels: onLoad error: ${e.message}`, e);
     }
 }
 
