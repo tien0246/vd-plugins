@@ -1,4 +1,4 @@
-(function(exports,common,metro,_vendetta,plugin,patcher,assets,components,ui){'use strict';const { ScrollView, View: View$1, Text } = common.ReactNative;
+(function(exports,common,metro,_vendetta,plugin,patcher,assets,components,toasts,ui){'use strict';const { ScrollView, View: View$1, Text } = common.ReactNative;
 const { FormDivider } = components.Forms;
 const ChannelStore$1 = metro.findByStoreName("ChannelStore");
 const styles = common.stylesheet.createThemedStyleSheet({
@@ -50,9 +50,7 @@ function DeletedMessagesLog({ channelId }) {
   }, "No deleted messages logged for #", channel?.name, "."));
 }const { TouchableOpacity, View } = components.General;
 const ChannelStore = metro.findByStoreName("ChannelStore");
-const Navigation = metro.findByProps("push", "pushLazy", "pop");
-const Navigator = metro.findByName("Navigator") ?? metro.findByProps("Navigator")?.Navigator;
-const { getRenderCloseButton } = metro.findByProps("getRenderCloseButton");
+let Navigation, Navigator, getRenderCloseButton;
 const CACHE_EXPIRY_MS = 2 * 24 * 60 * 60 * 1e3;
 plugin.storage.messageCache ??= {};
 plugin.storage.deletedMessages ??= {};
@@ -81,28 +79,35 @@ function cacheMessage(message) {
   };
 }
 function TrashButton({ channelId, channelName }) {
-  const navigator = function() {
-    return /* @__PURE__ */ common.React.createElement(Navigator, {
-      initialRouteName: "DeletedMessagesLog",
-      screens: {
-        DeletedMessagesLog: {
-          title: `Deleted Msgs in #${channelName}`,
-          headerLeft: getRenderCloseButton(function() {
-            return Navigation.pop();
-          }),
-          render: function() {
-            return /* @__PURE__ */ common.React.createElement(DeletedMessagesLog, {
-              channelId
-            });
+  Navigation ??= metro.findByProps("push", "pushLazy", "pop");
+  Navigator ??= metro.findByName("Navigator") ?? metro.findByProps("Navigator")?.Navigator;
+  getRenderCloseButton ??= metro.findByProps("getRenderCloseButton")?.getRenderCloseButton;
+  const handlePress = function() {
+    if (!Navigation || !Navigator || !getRenderCloseButton) {
+      return toasts.showToast("Failed to get navigation modules.");
+    }
+    const navigator = function() {
+      return /* @__PURE__ */ common.React.createElement(Navigator, {
+        initialRouteName: "DeletedMessagesLog",
+        screens: {
+          DeletedMessagesLog: {
+            title: `Deleted Msgs in #${channelName}`,
+            headerLeft: getRenderCloseButton(function() {
+              return Navigation.pop();
+            }),
+            render: function() {
+              return /* @__PURE__ */ common.React.createElement(DeletedMessagesLog, {
+                channelId
+              });
+            }
           }
         }
-      }
-    });
+      });
+    };
+    Navigation.push(navigator);
   };
   return /* @__PURE__ */ common.React.createElement(TouchableOpacity, {
-    onPress: function() {
-      return Navigation.push(navigator);
-    },
+    onPress: handlePress,
     style: {
       position: "absolute",
       right: 50,
@@ -184,4 +189,4 @@ var index = {
     patches.length = 0;
     _vendetta.logger.log("MessageLogger unloaded.");
   }
-};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro.common,vendetta.metro,vendetta,vendetta.plugin,vendetta.patcher,vendetta.ui.assets,vendetta.ui.components,vendetta.ui);
+};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro.common,vendetta.metro,vendetta,vendetta.plugin,vendetta.patcher,vendetta.ui.assets,vendetta.ui.components,vendetta.ui.toasts,vendetta.ui);
