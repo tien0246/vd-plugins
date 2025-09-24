@@ -1,7 +1,7 @@
 import { findByName, findByProps } from "@vendetta/metro";
 import { constants, React } from "@vendetta/metro/common";
 import { instead, after } from "@vendetta/patcher";
-import { logger } from "@vendetta";
+import { showToast } from "@vendetta/ui/toasts";
 import HiddenChannel from "./HiddenChannel.jsx";
 
 let patches = [];
@@ -34,7 +34,7 @@ function onLoad() {
                 return res;
             }));
         } else {
-            logger.error("Could not find Permissions module for hidden-channels.");
+            showToast("hidden-channels: Failed to find Permissions module");
         }
 
         const Router = findByProps("transitionToGuild");
@@ -44,7 +44,7 @@ function onLoad() {
                 if (!isHidden(channel) && typeof orig === "function") orig(...args);
             }));
         } else {
-            logger.error("Could not find Router module for hidden-channels.");
+            showToast("hidden-channels: Failed to find Router module");
         }
 
         const Fetcher = findByProps("stores", "fetchMessages");
@@ -54,7 +54,7 @@ function onLoad() {
                 if (!isHidden(channelId) && typeof orig === "function") orig(...args);
             }));
         } else {
-            logger.error("Could not find Fetcher module for hidden-channels.");
+            showToast("hidden-channels: Failed to find Fetcher module");
         }
 
         const MessagesConnected = findByName("MessagesWrapperConnected", false);
@@ -65,9 +65,9 @@ function onLoad() {
                 else return React.createElement(HiddenChannel, {channel});
             }));
         } else {
-            logger.error("Could not find MessagesConnected component for hidden-channels.");
+            showToast("hidden-channels: Failed to find MessagesConnected");
         }
     } catch (e) {
-        logger.error("Failed to load hidden-channels plugin", e);
+        showToast(`hidden-channels: onLoad error: ${e.message}`);
     }
 }
