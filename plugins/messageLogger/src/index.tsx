@@ -79,6 +79,8 @@ export default {
                 const channel = args[0]?.channel;
                 if (!channel) return;
 
+                showToast("Patching Channel Header for MessageLogger UI...", 1);
+
                 const channelId = channel.id;
                 const hasDeleted = storage.deletedMessages[channelId]?.length > 0;
                 if (!hasDeleted) return;
