@@ -1,12 +1,18 @@
-import { FluxDispatcher } from "@vendetta/metro/common";
+import { FluxDispatcher, React } from "@vendetta/metro/common";
+import { findByProps, findByName } from "@vendetta/metro";
 import { showToast } from "@vendetta/ui/toasts";
 import { logger } from "@vendetta";
 import { storage } from "@vendetta/plugin";
+import { after, before } from "@vendetta/patcher";
+import { findInReactTree } from "@vendetta/utils";
+import { getAssetIDByName } from "@vendetta/ui/assets";
+
+const ActionSheet = findByProps("openLazy", "hideActionSheet");
+const { ActionSheetRow } = findByProps("ActionSheetRow");
 
 // Expire messages from cache after 2 days
 const CACHE_EXPIRY_MS = 2 * 24 * 60 * 60 * 1000;
 
-// Initialize storage if it doesn't exist
 storage.messageCache ??= {};
 
 const patches = [];
@@ -34,7 +40,6 @@ function cacheMessage(message) {
         content: message.content,
         author: message.author?.username ?? "unknown",
         timestamp: Date.now(),
-        // Preserve existing edit history
         editHistory: existingData?.editHistory ?? [],
     };
 }
@@ -50,15 +55,13 @@ export default {
         patches.push(FluxDispatcher.subscribe("MESSAGE_UPDATE", ({ message: updatedMessage }) => {
             const oldCachedMessage = storage.messageCache[updatedMessage.id];
 
-            // Check if it's a real edit of a cached message with different content
-            if (oldCachedMessage && updatedMessage.content && oldCachedMessage.content !== updatedMessage.content) {
+            if (oldCachedMessage && updatedMessage.content && oldCachedMessage.content !== oldCachedMessage.content) {
                 const newEditHistory = oldCachedMessage.editHistory ?? [];
                 newEditHistory.push({
                     content: oldCachedMessage.content,
                     timestamp: oldCachedMessage.timestamp,
                 });
 
-                // Update the cache with the new content and the history
                 storage.messageCache[updatedMessage.id] = {
                     ...oldCachedMessage,
                     content: updatedMessage.content,
@@ -78,7 +81,41 @@ export default {
             }
         }));
 
-        logger.log("MessageLogger loaded with persistent storage strategy.");
+        // Patch context menu
+        patches.push(before("openLazy", ActionSheet, (args) => {
+            const [component, action, messageProps] = args;
+            if (action !== "MessageLongPressActionSheet") return;
+
+            const messageId = messageProps?.message?.id;
+            if (!messageId) return;
+
+            const cachedMessage = storage.messageCache[messageId];
+            const hasHistory = cachedMessage?.editHistory?.length > 0;
+
+            if (!hasHistory) return;
+
+            component.then(instance => {
+                const unpatch = after("default", instance, (_, res) => {
+                    React.useEffect(() => () => { unpatch() }, []);
+                    
+                    const buttons = findInReactTree(res, r => r?.find?.(c => c?.props?.label === "Copy Text"));
+                    if (!buttons) return;
+
+                    buttons.push(
+                        <ActionSheetRow
+                            label="View Edit History"
+                            icon={<ActionSheetRow.Icon source={getAssetIDByName("ic_audit_log_24px")} />}
+                            onPress={() => {
+                                showToast(`This message has ${cachedMessage.editHistory.length} previous version(s).`);
+                                ActionSheet.hideActionSheet();
+                            }}
+                        />
+                    );
+                });
+            });
+        }));
+
+        logger.log("MessageLogger loaded with persistent storage and context menu patch.");
     },
     onUnload: () => {
         for (const unpatch of patches) {
