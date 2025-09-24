@@ -57,9 +57,9 @@ plugin.storage.deletedMessages ??= {};
 const patches = [];
 const styles = common.stylesheet.createThemedStyleSheet({
   iconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: ui.semanticColors.BACKGROUND_MODIFIER_ACCENT,
     justifyContent: "center",
     alignItems: "center"
@@ -127,7 +127,7 @@ function TrashButton({ channel }) {
     style: {
       position: "absolute",
       right: 16,
-      top: 16,
+      top: 14,
       zIndex: 1
     }
   }, /* @__PURE__ */ common.React.createElement(View, {
