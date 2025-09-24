@@ -26,29 +26,47 @@ function pruneCache() {
 }
 
 function cacheMessage(message) {
-    // Only cache messages with content from regular users
     if (!message?.id || !message.content || message.author?.bot) return;
+
+    const existingData = storage.messageCache[message.id];
 
     storage.messageCache[message.id] = {
         content: message.content,
         author: message.author?.username ?? "unknown",
         timestamp: Date.now(),
+        // Preserve existing edit history
+        editHistory: existingData?.editHistory ?? [],
     };
 }
 
 export default {
     onLoad: () => {
-        // Prune old messages from the cache on load
         pruneCache();
 
         patches.push(FluxDispatcher.subscribe("MESSAGE_CREATE", ({ message }) => {
             cacheMessage(message);
         }));
 
-        patches.push(FluxDispatcher.subscribe("MESSAGE_UPDATE", ({ message }) => {
-            // Only update the cache if the message exists and has content
-            if (message.content && storage.messageCache[message.id]) {
-                cacheMessage(message);
+        patches.push(FluxDispatcher.subscribe("MESSAGE_UPDATE", ({ message: updatedMessage }) => {
+            const oldCachedMessage = storage.messageCache[updatedMessage.id];
+
+            // Check if it's a real edit of a cached message with different content
+            if (oldCachedMessage && updatedMessage.content && oldCachedMessage.content !== updatedMessage.content) {
+                const newEditHistory = oldCachedMessage.editHistory ?? [];
+                newEditHistory.push({
+                    content: oldCachedMessage.content,
+                    timestamp: oldCachedMessage.timestamp,
+                });
+
+                // Update the cache with the new content and the history
+                storage.messageCache[updatedMessage.id] = {
+                    ...oldCachedMessage,
+                    content: updatedMessage.content,
+                    timestamp: Date.now(),
+                    editHistory: newEditHistory,
+                };
+
+                showToast(`Edited: ${oldCachedMessage.content.slice(0, 20)}... -> ${updatedMessage.content.slice(0, 20)}...`);
             }
         }));
 
@@ -56,7 +74,6 @@ export default {
             if (storage.messageCache[action.id]) {
                 const cachedMessage = storage.messageCache[action.id];
                 showToast(`Deleted from ${cachedMessage.author}: ${cachedMessage.content}`);
-                
                 delete storage.messageCache[action.id];
             }
         }));
