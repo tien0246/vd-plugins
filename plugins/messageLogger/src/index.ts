@@ -3,8 +3,8 @@ import { showToast } from "@vendetta/ui/toasts";
 import { logger } from "@vendetta";
 import { storage } from "@vendetta/plugin";
 
-// Expire messages from cache after 15 minutes
-const CACHE_EXPIRY_MS = 15 * 60 * 1000;
+// Expire messages from cache after 2 days
+const CACHE_EXPIRY_MS = 2 * 24 * 60 * 60 * 1000;
 
 // Initialize storage if it doesn't exist
 storage.messageCache ??= {};
