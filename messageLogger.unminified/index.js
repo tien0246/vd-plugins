@@ -1,6 +1,7 @@
 (function(exports,common,metro,toasts,_vendetta){'use strict';let unpatch;
 var index = {
   onLoad: function() {
+    toasts.showToast("MessageLogger: onLoad called (v1)");
     _vendetta.logger.log("MessageLogger loaded.");
     const MessageStore = metro.findByStoreName("MessageStore");
     unpatch = common.FluxDispatcher.subscribe("MESSAGE_DELETE", function(action) {
