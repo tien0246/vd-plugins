@@ -25,8 +25,10 @@ export default {
                 if (message && message.content) {
                     const author = message.author?.username ?? "unknown";
                     showToast(`Deleted from ${author}: ${message.content}`);
+                } else if (message) {
+                    showToast(`ML: Deleted msg [${action.id}] has no text content.`);
                 } else {
-                    showToast(`ML: Deleted msg [${action.id}] not in cache or has no content.`);
+                    showToast(`ML: Deleted msg [${action.id}] not in cache.`);
                 }
             } catch (e) {
                 logger.error("MessageLogger: Error in MESSAGE_DELETE", e);
