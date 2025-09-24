@@ -1,15 +1,17 @@
-import { FluxDispatcher, React, ReactNative, NavigationNative } from "@vendetta/metro/common";
+import { FluxDispatcher, React, ReactNative } from "@vendetta/metro/common";
 import { findByProps, findByName, findByStoreName } from "@vendetta/metro";
 import { logger } from "@vendetta";
 import { storage } from "@vendetta/plugin";
 import { instead } from "@vendetta/patcher";
 import { getAssetIDByName } from "@vendetta/ui/assets";
 import { Forms, General } from "@vendetta/ui/components";
-import { useProxy } from "@vendetta/storage";
 import DeletedMessagesLog from "./DeletedMessagesLog.tsx";
 
 const { TouchableOpacity, View } = General;
 const ChannelStore = findByStoreName("ChannelStore");
+
+// Lazy load navigation modules
+let Navigation, Navigator, getRenderCloseButton;
 
 const CACHE_EXPIRY_MS = 2 * 24 * 60 * 60 * 1000;
 
@@ -45,21 +47,35 @@ function cacheMessage(message) {
 }
 
 function TrashButton({ channel }) {
-    useProxy(storage); // Re-render when storage changes
-    const navigation = NavigationNative.useNavigation();
+    // Lazy-load the modules only when the component is rendered
+    Navigation ??= findByProps("push", "pushLazy", "pop");
+    Navigator ??= findByName("Navigator") ?? findByProps("Navigator")?.Navigator;
+    getRenderCloseButton ??= (findByProps("getRenderCloseButton")?.getRenderCloseButton ?? findByProps("getHeaderCloseButton")?.getHeaderCloseButton);
 
-    const hasDeleted = storage.deletedMessages[channel.id]?.length > 0;
-    if (!hasDeleted) return null;
+    const handlePress = () => {
+        if (!Navigation || !Navigator || !getRenderCloseButton) {
+            return logger.error("MessageLogger: Failed to get navigation modules.");
+        }
+
+        const navigator = () => (
+            <Navigator
+                initialRouteName="DeletedMessagesLog"
+                screens={{
+                    DeletedMessagesLog: {
+                        title: `Deleted Msgs in #${channel.name}`,
+                        headerLeft: getRenderCloseButton(() => Navigation.pop()),
+                        render: () => <DeletedMessagesLog channelId={channel.id} />,
+                    }
+                }}
+            />
+        );
+        Navigation.push(navigator);
+    };
 
     return (
         <TouchableOpacity
-            onPress={() => {
-                navigation.push("VendettaCustomPage", {
-                    title: `Deleted Msgs in #${channel.name}`,
-                    render: () => <DeletedMessagesLog channelId={channel.id} />,
-                });
-            }}
-            style={{ position: 'absolute', right: 50, top: 18, zIndex: 1 }} // Adjusted coordinates
+            onPress={handlePress}
+            style={{ position: 'absolute', right: 50, top: 18, zIndex: 1 }} // Adjusted style
         >
             <Forms.FormIcon source={getAssetIDByName("ic_trash_24px")} />
         </TouchableOpacity>
@@ -99,6 +115,9 @@ export default {
                 const channel = ChannelStore.getChannel(channelId);
                 if (!channel) return originalHeader;
 
+                const hasDeleted = storage.deletedMessages[channelId]?.length > 0;
+                if (!hasDeleted) return originalHeader;
+
                 return (
                     <View style={{ flex: 1 }}>
                         {originalHeader}
@@ -110,7 +129,7 @@ export default {
             logger.error("MessageLogger: Could not find ChannelHeader component");
         }
 
-        logger.log("MessageLogger v1.0.1 loaded.");
+        logger.log("MessageLogger v1.0.2 loaded.");
     },
     onUnload: () => {
         patches.forEach(p => p?.());

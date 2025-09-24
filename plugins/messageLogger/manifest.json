@@ -1,14 +1,18 @@
 {
   "name": "MessageLogger",
-  "description": "Logs deleted and edited messages. (Ported from Vencord)",
+  "description": "Logs deleted and edited messages. (Ported from Vencord) (v1.0.2)",
   "authors": [
     {
       "name": "tien0246",
       "id": "YOUR_USER_ID_HERE"
+    },
+    {
+      "name": "Vencord Team",
+      "id": "1015973197736964126"
     }
   ],
   "main": "src/index.tsx",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "vendetta": {
     "icon": "ic_audit_log_24px"
   }
