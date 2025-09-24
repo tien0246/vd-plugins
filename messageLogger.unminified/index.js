@@ -198,7 +198,6 @@ var index = {
     } else {
       _vendetta.logger.error("MessageLogger: Could not find ChannelHeader component");
     }
-    _vendetta.logger.log("MessageLogger v1.0.3 loaded.");
   },
   onUnload: function() {
     patches.forEach(function(p) {
