@@ -1,4 +1,4 @@
-(function(exports,common,metro,_vendetta,plugin,patcher,assets,components,toasts,ui){'use strict';const { ScrollView, View: View$1, Text } = common.ReactNative;
+(function(exports,common,metro,_vendetta,plugin,patcher,assets,components,ui){'use strict';const { ScrollView, View: View$1, Text } = common.ReactNative;
 const { FormDivider } = components.Forms;
 const ChannelStore$1 = metro.findByStoreName("ChannelStore");
 const styles = common.stylesheet.createThemedStyleSheet({
@@ -81,14 +81,11 @@ function cacheMessage(message) {
 function TrashButton({ channelId, channelName }) {
   Navigation ??= metro.findByProps("push", "pushLazy", "pop");
   Navigator ??= metro.findByName("Navigator") ?? metro.findByProps("Navigator")?.Navigator;
-  getRenderCloseButton ??= metro.findByProps("getRenderCloseButton")?.getRenderCloseButton;
+  getRenderCloseButton ??= metro.findByProps("getRenderCloseButton")?.getRenderCloseButton ?? metro.findByProps("getHeaderCloseButton")?.getHeaderCloseButton;
   const handlePress = function() {
-    if (!Navigation)
-      return toasts.showToast("ML Error: Navigation module not found!");
-    if (!Navigator)
-      return toasts.showToast("ML Error: Navigator component not found!");
-    if (!getRenderCloseButton)
-      return toasts.showToast("ML Error: getRenderCloseButton not found!");
+    if (!Navigation || !Navigator || !getRenderCloseButton) {
+      return _vendetta.logger.error("MessageLogger: Failed to get navigation modules.");
+    }
     const navigator = function() {
       return /* @__PURE__ */ common.React.createElement(Navigator, {
         initialRouteName: "DeletedMessagesLog",
@@ -192,4 +189,4 @@ var index = {
     patches.length = 0;
     _vendetta.logger.log("MessageLogger unloaded.");
   }
-};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro.common,vendetta.metro,vendetta,vendetta.plugin,vendetta.patcher,vendetta.ui.assets,vendetta.ui.components,vendetta.ui.toasts,vendetta.ui);
+};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro.common,vendetta.metro,vendetta,vendetta.plugin,vendetta.patcher,vendetta.ui.assets,vendetta.ui.components,vendetta.ui);
