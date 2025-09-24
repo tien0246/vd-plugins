@@ -71,7 +71,7 @@ export default {
             }
         }));
 
-        // Patch Channel Header to log its children's prop keys
+        // Patch Channel Header to log its own structure
         const ChannelHeader = findByName("ChannelHeader", false);
         if (ChannelHeader) {
             patches.push(after("default", ChannelHeader, (args, res) => {
@@ -83,32 +83,17 @@ export default {
 
                 hasShownAlert = true; // Show the alert only once per session
                 
-                const children = res?.props?.children;
-                if (!children) {
-                    showToast("No children found in ChannelHeader");
-                    return;
-                }
+                const resKeys = Object.keys(res ?? {}).join(', ');
+                const propsKeys = Object.keys(res?.props ?? {}).join(', ');
 
-                const childrenArray = Array.isArray(children) ? children : [children];
-                const propsSet = new Set();
-
-                for (const child of childrenArray) {
-                    if (child?.props) {
-                        const keys = Object.keys(child.props);
-                        if (keys.length > 0) {
-                            propsSet.add(`[${keys.join(', ')}]`);
-                        }
-                    }
-                }
-
-                const propsString = Array.from(propsSet).join('\n');
+                const alertContent = `res keys: [${resKeys}]\n\nprops keys: [${propsKeys}]`;
 
                 showConfirmationAlert({
-                    title: "Second Level Prop Keys",
-                    content: propsString || "No 2nd-level components with props found.",
+                    title: "Header Render Output",
+                    content: alertContent,
                     confirmText: "Copy",
                     onConfirm: () => {
-                        clipboard.setString(propsString);
+                        clipboard.setString(alertContent);
                         showToast("Copied to clipboard.");
                     },
                     cancelText: "Close",
