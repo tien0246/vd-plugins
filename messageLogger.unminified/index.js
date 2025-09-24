@@ -1,6 +1,6 @@
-(function(exports,common,metro,_vendetta,plugin,patcher,assets,components,storage,ui){'use strict';const { ScrollView, View, Text } = common.ReactNative;
+(function(exports,common,metro,_vendetta,plugin,patcher,assets,components,storage,ui){'use strict';const { ScrollView, View: View$1, Text } = common.ReactNative;
 const { FormDivider } = components.Forms;
-const ChannelStore = metro.findByStoreName("ChannelStore");
+const ChannelStore$1 = metro.findByStoreName("ChannelStore");
 const styles = common.stylesheet.createThemedStyleSheet({
   container: {
     flex: 1,
@@ -29,14 +29,14 @@ const styles = common.stylesheet.createThemedStyleSheet({
   }
 });
 function DeletedMessagesLog({ channelId }) {
-  const channel = ChannelStore.getChannel(channelId);
+  const channel = ChannelStore$1.getChannel(channelId);
   const deletedMessages = plugin.storage.deletedMessages?.[channelId] ?? [];
   return /* @__PURE__ */ common.React.createElement(ScrollView, {
     style: styles.container
   }, deletedMessages.length > 0 ? deletedMessages.map(function(msg, index) {
     return /* @__PURE__ */ common.React.createElement(common.React.Fragment, {
       key: msg.id + index
-    }, /* @__PURE__ */ common.React.createElement(View, {
+    }, /* @__PURE__ */ common.React.createElement(View$1, {
       style: styles.logEntry
     }, /* @__PURE__ */ common.React.createElement(Text, {
       style: styles.author
@@ -48,7 +48,8 @@ function DeletedMessagesLog({ channelId }) {
   }) : /* @__PURE__ */ common.React.createElement(Text, {
     style: styles.emptyState
   }, "No deleted messages logged for #", channel?.name, "."));
-}const { TouchableOpacity } = components.General;
+}const { TouchableOpacity, View } = components.General;
+const ChannelStore = metro.findByStoreName("ChannelStore");
 const CACHE_EXPIRY_MS = 2 * 24 * 60 * 60 * 1e3;
 plugin.storage.messageCache ??= {};
 plugin.storage.deletedMessages ??= {};
@@ -79,7 +80,7 @@ function cacheMessage(message) {
     editHistory: existingData?.editHistory ?? []
   };
 }
-function DeletedMessagesButton({ channel }) {
+function TrashButton({ channel }) {
   storage.useProxy(plugin.storage);
   const navigation = common.NavigationNative.useNavigation();
   const hasDeleted = plugin.storage.deletedMessages[channel.id]?.length > 0;
@@ -95,11 +96,14 @@ function DeletedMessagesButton({ channel }) {
           });
         }
       });
+    },
+    style: {
+      position: "absolute",
+      right: 50,
+      top: 18,
+      zIndex: 1
     }
   }, /* @__PURE__ */ common.React.createElement(components.Forms.FormIcon, {
-    style: {
-      marginRight: 16
-    },
     source: assets.getAssetIDByName("ic_trash_24px")
   }));
 }
@@ -140,19 +144,28 @@ var index = {
         delete plugin.storage.messageCache[a.id];
       }
     }));
-    const ChannelButtons = metro.findByName("ChannelButtons", false);
-    if (ChannelButtons) {
-      patches.push(patcher.after("default", ChannelButtons, function([{ channel }], res) {
-        if (!channel || !Array.isArray(res?.props?.children))
-          return;
-        res.props.children.unshift(/* @__PURE__ */ common.React.createElement(DeletedMessagesButton, {
+    const ChannelHeader = metro.findByName("ChannelHeader", false);
+    if (ChannelHeader) {
+      patches.push(patcher.instead("default", ChannelHeader, function(args, orig) {
+        const originalHeader = orig(...args);
+        const channelId = args[0]?.channelId;
+        if (!channelId)
+          return originalHeader;
+        const channel = ChannelStore.getChannel(channelId);
+        if (!channel)
+          return originalHeader;
+        return /* @__PURE__ */ common.React.createElement(View, {
+          style: {
+            flex: 1
+          }
+        }, originalHeader, /* @__PURE__ */ common.React.createElement(TrashButton, {
           channel
         }));
       }));
     } else {
-      _vendetta.logger.error("MessageLogger: Could not find ChannelButtons component");
+      _vendetta.logger.error("MessageLogger: Could not find ChannelHeader component");
     }
-    _vendetta.logger.log("MessageLogger v1.0.0 loaded.");
+    _vendetta.logger.log("MessageLogger v1.0.1 loaded.");
   },
   onUnload: function() {
     patches.forEach(function(p) {
