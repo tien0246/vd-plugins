@@ -5,7 +5,6 @@ import { storage } from "@vendetta/plugin";
 import { instead } from "@vendetta/patcher";
 import { getAssetIDByName } from "@vendetta/ui/assets";
 import { Forms, General } from "@vendetta/ui/components";
-import { showToast } from "@vendetta/ui/toasts";
 import DeletedMessagesLog from "./DeletedMessagesLog.tsx";
 
 const { TouchableOpacity, View } = General;
@@ -45,15 +44,14 @@ function cacheMessage(message) {
 }
 
 function TrashButton({ channelId, channelName }) {
-    // Find modules only when the component is rendered
     Navigation ??= findByProps("push", "pushLazy", "pop");
     Navigator ??= findByName("Navigator") ?? findByProps("Navigator")?.Navigator;
-    getRenderCloseButton ??= findByProps("getRenderCloseButton")?.getRenderCloseButton;
+    getRenderCloseButton ??= (findByProps("getRenderCloseButton")?.getRenderCloseButton ?? findByProps("getHeaderCloseButton")?.getHeaderCloseButton);
 
     const handlePress = () => {
-        if (!Navigation) return showToast("ML Error: Navigation module not found!");
-        if (!Navigator) return showToast("ML Error: Navigator component not found!");
-        if (!getRenderCloseButton) return showToast("ML Error: getRenderCloseButton not found!");
+        if (!Navigation || !Navigator || !getRenderCloseButton) {
+            return logger.error("MessageLogger: Failed to get navigation modules.");
+        }
 
         const navigator = () => (
             <Navigator
