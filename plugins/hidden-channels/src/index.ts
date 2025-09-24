@@ -6,18 +6,20 @@ import HiddenChannel from "./HiddenChannel.jsx";
 
 let patches = [];
 
-const getChannel = findByProps("getChannel")?.getChannel;
-const ChannelTypes = findByProps("ChannelTypes")?.ChannelTypes;
-
-function isHidden(channel: any | undefined) {
-    if (!getChannel || !ChannelTypes) return false;
-    if (channel == undefined) return false;
-    if (typeof channel === 'string')
-        channel = getChannel(channel);
-    if (!channel || [ChannelTypes.DM, ChannelTypes.GROUP_DM, ChannelTypes.GUILD_CATEGORY].includes(channel.type)) return false;
-    
+function isHidden(channelIdOrObject: any | undefined) {
+    const getChannel = findByProps("getChannel")?.getChannel;
+    const ChannelTypes = findByProps("ChannelTypes")?.ChannelTypes;
     const Permissions = findByProps("getChannelPermissions", "can");
-    if (!Permissions) return false;
+
+    if (!getChannel || !ChannelTypes || !Permissions) {
+        showToast("hidden-channels: Could not find core modules");
+        return false;
+    }
+
+    let channel = channelIdOrObject;
+    if (typeof channel === 'string') channel = getChannel(channel);
+    
+    if (!channel || [ChannelTypes.DM, ChannelTypes.GROUP_DM, ChannelTypes.GUILD_CATEGORY].includes(channel.type)) return false;
 
     channel.realCheck = true;
     let res = !Permissions.can(constants.Permissions.VIEW_CHANNEL, channel);
@@ -26,6 +28,7 @@ function isHidden(channel: any | undefined) {
 }
 
 function onLoad() {
+    showToast("hidden-channels: onLoad called (v1)");
     try {
         const Permissions = findByProps("getChannelPermissions", "can");
         if (Permissions) {
@@ -69,5 +72,14 @@ function onLoad() {
         }
     } catch (e) {
         showToast(`hidden-channels: onLoad error: ${e.message}`);
+    }
+}
+
+export default {
+    onLoad,
+    onUnload: () => {
+        for (const unpatch of patches) {
+            unpatch();
+        };
     }
 }
