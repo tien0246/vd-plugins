@@ -51,9 +51,9 @@ function TrashButton({ channelId, channelName }) {
     getRenderCloseButton ??= findByProps("getRenderCloseButton")?.getRenderCloseButton;
 
     const handlePress = () => {
-        if (!Navigation || !Navigator || !getRenderCloseButton) {
-            return showToast("Failed to get navigation modules.");
-        }
+        if (!Navigation) return showToast("ML Error: Navigation module not found!");
+        if (!Navigator) return showToast("ML Error: Navigator component not found!");
+        if (!getRenderCloseButton) return showToast("ML Error: getRenderCloseButton not found!");
 
         const navigator = () => (
             <Navigator
