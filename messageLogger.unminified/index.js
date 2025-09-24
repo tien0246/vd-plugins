@@ -77,21 +77,23 @@ var index = {
         if (!hasDeleted)
           return;
         hasShownAlert = true;
-        const components = /* @__PURE__ */ new Set();
+        const propsSet = /* @__PURE__ */ new Set();
         utils.findInReactTree(res, function(node) {
-          const name = node?.type?.name;
-          if (typeof name === "string") {
-            components.add(name);
+          if (node?.props) {
+            const keys = Object.keys(node.props);
+            if (keys.length > 0) {
+              propsSet.add(`[${keys.join(", ")}]`);
+            }
           }
           return false;
         });
-        const componentsString = Array.from(components).join("\n");
+        const propsString = Array.from(propsSet).join("\n");
         alerts.showConfirmationAlert({
-          title: "Component Names",
-          content: componentsString || "No named components found.",
+          title: "Component Prop Keys",
+          content: propsString || "No components with props found.",
           confirmText: "Copy",
           onConfirm: function() {
-            common.clipboard.setString(componentsString);
+            common.clipboard.setString(propsString);
             toasts.showToast("Copied to clipboard.");
           },
           cancelText: "Close"
