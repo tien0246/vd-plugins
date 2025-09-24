@@ -105,7 +105,7 @@ async function buildPlugins(minified) {
 await buildPlugins(true);
 await buildPlugins(false);
 
-await mkdir("./dist/themes");
+await mkdir("./dist/themes", { recursive: true });
 for (let theme of (await readdir("./themes")).filter(f => f.endsWith(".js"))) {
   try {
     const themeModule = await import(`./themes/${theme}`);
