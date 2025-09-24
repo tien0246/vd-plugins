@@ -86,12 +86,17 @@ export default {
                 const trashButton = (
                     <TouchableOpacity
                         onPress={() => {
+                            if (!Navigation) {
+                                showToast("ML Error: Navigation module not found!");
+                                return;
+                            }
+                            showToast("ML: Opening deleted messages log...");
                             Navigation.push("VendettaCustomPage", {
                                 title: `Deleted Msgs in #${channel.name}`,
                                 render: () => <DeletedMessagesLog channelId={channelId} />,
                             });
                         }}
-                        style={{ position: 'absolute', right: 50, top: 12, zIndex: 1 }}
+                        style={{ position: 'absolute', right: 16, top: 13, zIndex: 1 }}
                     >
                         <Forms.FormIcon source={getAssetIDByName("ic_trash_24px")} />
                     </TouchableOpacity>
