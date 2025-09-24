@@ -1,10 +1,11 @@
-import { FluxDispatcher, React, ReactNative } from "@vendetta/metro/common";
+import { FluxDispatcher, React, ReactNative, NavigationNative, stylesheet } from "@vendetta/metro/common";
 import { findByProps, findByName, findByStoreName } from "@vendetta/metro";
 import { logger } from "@vendetta";
 import { storage } from "@vendetta/plugin";
 import { instead } from "@vendetta/patcher";
 import { getAssetIDByName } from "@vendetta/ui/assets";
 import { Forms, General } from "@vendetta/ui/components";
+import { semanticColors } from "@vendetta/ui";
 import DeletedMessagesLog from "./DeletedMessagesLog.tsx";
 
 const { TouchableOpacity, View } = General;
@@ -19,6 +20,20 @@ storage.messageCache ??= {};
 storage.deletedMessages ??= {};
 
 const patches = [];
+
+const styles = stylesheet.createThemedStyleSheet({
+    iconContainer: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: semanticColors.BACKGROUND_MODIFIER_ACCENT,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    icon: {
+        tintColor: semanticColors.INTERACTIVE_NORMAL,
+    }
+});
 
 function pruneCache() {
     const now = Date.now();
@@ -47,7 +62,6 @@ function cacheMessage(message) {
 }
 
 function TrashButton({ channel }) {
-    // Lazy-load the modules only when the component is rendered
     Navigation ??= findByProps("push", "pushLazy", "pop");
     Navigator ??= findByName("Navigator") ?? findByProps("Navigator")?.Navigator;
     getRenderCloseButton ??= (findByProps("getRenderCloseButton")?.getRenderCloseButton ?? findByProps("getHeaderCloseButton")?.getHeaderCloseButton);
@@ -75,9 +89,11 @@ function TrashButton({ channel }) {
     return (
         <TouchableOpacity
             onPress={handlePress}
-            style={{ position: 'absolute', right: 50, top: 18, zIndex: 1 }} // Adjusted style
+            style={{ position: 'absolute', right: 50, top: 8, zIndex: 1 }}
         >
-            <Forms.FormIcon source={getAssetIDByName("ic_trash_24px")} />
+            <View style={styles.iconContainer}>
+                <Forms.FormIcon style={styles.icon} source={getAssetIDByName("ic_trash_24px")} />
+            </View>
         </TouchableOpacity>
     );
 }
@@ -129,7 +145,7 @@ export default {
             logger.error("MessageLogger: Could not find ChannelHeader component");
         }
 
-        logger.log("MessageLogger v1.0.2 loaded.");
+        logger.log("MessageLogger v1.0.3 loaded.");
     },
     onUnload: () => {
         patches.forEach(p => p?.());
