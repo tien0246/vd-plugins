@@ -3,14 +3,14 @@ import { findByProps, findByName, findByStoreName } from "@vendetta/metro";
 import { showToast } from "@vendetta/ui/toasts";
 import { logger } from "@vendetta";
 import { storage } from "@vendetta/plugin";
-import { after, before } from "@vendetta/patcher";
+import { after, before, instead } from "@vendetta/patcher";
 import { findInReactTree } from "@vendetta/utils";
 import { getAssetIDByName } from "@vendetta/ui/assets";
 import { Forms, General } from "@vendetta/ui/components";
 import { showConfirmationAlert } from "@vendetta/ui/alerts";
 import DeletedMessagesLog from "./DeletedMessagesLog.tsx";
 
-const { TouchableOpacity } = General;
+const { TouchableOpacity, View } = General;
 const ActionSheet = findByProps("openLazy", "hideActionSheet");
 const { ActionSheetRow } = findByProps("ActionSheetRow");
 const Navigation = findByProps("push", "pop");
@@ -46,8 +46,6 @@ function cacheMessage(message) {
     };
 }
 
-let hasShownAlert = false;
-
 export default {
     onLoad: () => {
         pruneCache();
@@ -71,44 +69,50 @@ export default {
             }
         }));
 
-        // Patch Channel Header to log its own structure
+        // Patch Channel Header using component wrapping
         const ChannelHeader = findByName("ChannelHeader", false);
         if (ChannelHeader) {
-            patches.push(after("default", ChannelHeader, (args, res) => {
+            patches.push(instead("default", ChannelHeader, (args, orig) => {
+                const originalHeader = orig(...args);
                 const channelId = args[0]?.channelId;
-                if (!channelId || hasShownAlert) return;
+                if (!channelId) return originalHeader;
+
+                const channel = ChannelStore.getChannel(channelId);
+                if (!channel) return originalHeader;
 
                 const hasDeleted = storage.deletedMessages[channelId]?.length > 0;
-                if (!hasDeleted) return;
+                if (!hasDeleted) return originalHeader;
 
-                hasShownAlert = true; // Show the alert only once per session
-                
-                const resKeys = Object.keys(res ?? {}).join(', ');
-                const propsKeys = Object.keys(res?.props ?? {}).join(', ');
+                const trashButton = (
+                    <TouchableOpacity
+                        onPress={() => {
+                            Navigation.push("VendettaCustomPage", {
+                                title: `Deleted Msgs in #${channel.name}`,
+                                render: () => <DeletedMessagesLog channelId={channelId} />,
+                            });
+                        }}
+                        style={{ position: 'absolute', right: 50, top: 12, zIndex: 1 }}
+                    >
+                        <Forms.FormIcon source={getAssetIDByName("ic_trash_24px")} />
+                    </TouchableOpacity>
+                );
 
-                const alertContent = `res keys: [${resKeys}]\n\nprops keys: [${propsKeys}]`;
-
-                showConfirmationAlert({
-                    title: "Header Render Output",
-                    content: alertContent,
-                    confirmText: "Copy",
-                    onConfirm: () => {
-                        clipboard.setString(alertContent);
-                        showToast("Copied to clipboard.");
-                    },
-                    cancelText: "Close",
-                });
+                return (
+                    <View style={{ flex: 1 }}>
+                        {originalHeader}
+                        {trashButton}
+                    </View>
+                );
             }));
         } else {
             logger.error("MessageLogger: Could not find ChannelHeader component");
         }
 
-        logger.log("MessageLogger loaded for debugging component tree.");
+        logger.log("MessageLogger loaded with UI.");
     },
     onUnload: () => {
         patches.forEach(p => p?.());
         patches.length = 0;
-        hasShownAlert = false;
         logger.log("MessageLogger unloaded.");
     }
 };
