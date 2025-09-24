@@ -77,30 +77,23 @@ export default {
         const ChannelHeader = findByName("ChannelHeader", false);
         if (ChannelHeader) {
             patches.push(after("default", ChannelHeader, (args, res) => {
-                showToast("ML: CH patch running");
                 const channelId = args[0]?.channelId;
                 if (!channelId) return;
-                showToast(`ML: CH patch got channelId: ${channelId}`);
 
                 const channel = ChannelStore.getChannel(channelId);
                 if (!channel) return;
-                showToast(`ML: CH patch got channel: ${channel.name}`);
 
                 const hasDeleted = storage.deletedMessages[channelId]?.length > 0;
-                showToast(`ML: CH patch hasDeleted: ${hasDeleted}`);
                 if (!hasDeleted) return;
 
-                const title = findInReactTree(res, r => r?.type?.name === "HeaderTitle");
-                if (!title?.props?.children) {
-                    showToast("ML: CH patch FAILED to find HeaderTitle");
+                const children = res?.props?.children;
+                if (!Array.isArray(children)) {
+                    showToast("ML Error: Header children not an array");
                     return;
                 }
-                showToast("ML: CH patch found HeaderTitle");
 
-                if (!Array.isArray(title.props.children)) title.props.children = [title.props.children];
-                
-                // Add trash icon button
-                title.props.children.push(
+                // Add trash icon button to the end of the header
+                children.push(
                     <TouchableOpacity
                         onPress={() => {
                             Navigation.push("VendettaCustomPage", {
@@ -108,12 +101,11 @@ export default {
                                 render: () => <DeletedMessagesLog channelId={channelId} />,
                             });
                         }}
-                        style={{ marginLeft: 8 }}
+                        style={{ position: 'absolute', right: 12, top: 12 }} // Position it absolutely for now
                     >
                         <Forms.FormIcon source={getAssetIDByName("ic_trash_24px")} />
                     </TouchableOpacity>
                 );
-                showToast("ML: CH patch pushed button");
             }));
         } else {
             logger.error("MessageLogger: Could not find ChannelHeader component");
