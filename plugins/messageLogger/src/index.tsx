@@ -86,14 +86,10 @@ export default {
                 const hasDeleted = storage.deletedMessages[channelId]?.length > 0;
                 if (!hasDeleted) return;
 
-                const children = res?.props?.children;
-                if (!Array.isArray(children)) {
-                    showToast("ML Error: Header children not an array");
-                    return;
-                }
+                const originalChildren = res?.props?.children;
+                if (!originalChildren) return;
 
-                // Add trash icon button to the end of the header
-                children.push(
+                const trashButton = (
                     <TouchableOpacity
                         onPress={() => {
                             Navigation.push("VendettaCustomPage", {
@@ -101,10 +97,17 @@ export default {
                                 render: () => <DeletedMessagesLog channelId={channelId} />,
                             });
                         }}
-                        style={{ position: 'absolute', right: 12, top: 12 }} // Position it absolutely for now
+                        style={{ position: 'absolute', right: 12, top: 12, zIndex: 1 }}
                     >
                         <Forms.FormIcon source={getAssetIDByName("ic_trash_24px")} />
                     </TouchableOpacity>
+                );
+
+                res.props.children = (
+                    <React.Fragment>
+                        {originalChildren}
+                        {trashButton}
+                    </React.Fragment>
                 );
             }));
         } else {
