@@ -1,6 +1,6 @@
 {
   "name": "MessageLogger",
-  "description": "Logs deleted and edited messages. (Ported from Vencord) (v36)",
+  "description": "Logs deleted and edited messages. (Ported from Vencord)",
   "authors": [
     {
       "name": "tien0246",
@@ -12,6 +12,7 @@
     }
   ],
   "main": "src/index.tsx",
+  "version": "1.0.0",
   "vendetta": {
     "icon": "ic_audit_log_24px"
   }

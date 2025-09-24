@@ -1,19 +1,16 @@
-import { FluxDispatcher, React, ReactNative } from "@vendetta/metro/common";
-import { findByProps, findByName, findByStoreName } from "@vendetta/metro";
+import { FluxDispatcher, React, ReactNative, NavigationNative } from "@vendetta/metro/common";
+import { findByName, findByStoreName } from "@vendetta/metro";
 import { logger } from "@vendetta";
 import { storage } from "@vendetta/plugin";
-import { instead } from "@vendetta/patcher";
+import { after } from "@vendetta/patcher";
 import { getAssetIDByName } from "@vendetta/ui/assets";
 import { Forms, General } from "@vendetta/ui/components";
+import { useProxy } from "@vendetta/storage";
 import DeletedMessagesLog from "./DeletedMessagesLog.tsx";
 
-const { TouchableOpacity, View } = General;
-const ChannelStore = findByStoreName("ChannelStore");
+const { TouchableOpacity } = General;
 
-// Lazy load navigation modules
-let Navigation, Navigator, getRenderCloseButton;
-
-const CACHE_EXPIRY_MS = 2 * 24 * 60 * 60 * 1000;
+const CACHE_EXPIRY_MS = 2 * 24 * 60 * 60 * 1000; // 2 days
 
 storage.messageCache ??= {};
 storage.deletedMessages ??= {};
@@ -29,6 +26,9 @@ function pruneCache() {
         storage.deletedMessages[channelId] = storage.deletedMessages[channelId].filter(msg => 
             now - new Date(msg.deletedTimestamp).getTime() < CACHE_EXPIRY_MS
         );
+        if (storage.deletedMessages[channelId].length === 0) {
+            delete storage.deletedMessages[channelId];
+        }
     });
 }
 
@@ -43,37 +43,24 @@ function cacheMessage(message) {
     };
 }
 
-function TrashButton({ channelId, channelName }) {
-    Navigation ??= findByProps("push", "pushLazy", "pop");
-    Navigator ??= findByName("Navigator") ?? findByProps("Navigator")?.Navigator;
-    getRenderCloseButton ??= (findByProps("getRenderCloseButton")?.getRenderCloseButton ?? findByProps("getHeaderCloseButton")?.getHeaderCloseButton);
+// The button component that will be injected
+function DeletedMessagesButton({ channel }) {
+    useProxy(storage); // Re-render when storage changes
+    const navigation = NavigationNative.useNavigation();
 
-    const handlePress = () => {
-        if (!Navigation || !Navigator || !getRenderCloseButton) {
-            return logger.error("MessageLogger: Failed to get navigation modules.");
-        }
-
-        const navigator = () => (
-            <Navigator
-                initialRouteName="DeletedMessagesLog"
-                screens={{
-                    DeletedMessagesLog: {
-                        title: `Deleted Msgs in #${channelName}`,
-                        headerLeft: getRenderCloseButton(() => Navigation.pop()),
-                        render: () => <DeletedMessagesLog channelId={channelId} />,
-                    }
-                }}
-            />
-        );
-        Navigation.push(navigator);
-    };
+    const hasDeleted = storage.deletedMessages[channel.id]?.length > 0;
+    if (!hasDeleted) return null;
 
     return (
         <TouchableOpacity
-            onPress={handlePress}
-            style={{ position: 'absolute', right: 50, top: 13, zIndex: 1 }}
+            onPress={() => {
+                navigation.push("VendettaCustomPage", {
+                    title: `Deleted Msgs in #${channel.name}`,
+                    render: () => <DeletedMessagesLog channelId={channel.id} />,
+                });
+            }}
         >
-            <Forms.FormIcon source={getAssetIDByName("ic_trash_24px")} />
+            <Forms.FormIcon style={{ marginRight: 16 }} source={getAssetIDByName("ic_trash_24px")} />
         </TouchableOpacity>
     );
 }
@@ -101,31 +88,20 @@ export default {
             }
         }));
 
-        const ChannelHeader = findByName("ChannelHeader", false);
-        if (ChannelHeader) {
-            patches.push(instead("default", ChannelHeader, (args, orig) => {
-                const originalHeader = orig(...args);
-                const channelId = args[0]?.channelId;
-                if (!channelId) return originalHeader;
-
-                const channel = ChannelStore.getChannel(channelId);
-                if (!channel) return originalHeader;
-
-                const hasDeleted = storage.deletedMessages[channelId]?.length > 0;
-                if (!hasDeleted) return originalHeader;
-
-                return (
-                    <View style={{ flex: 1 }}>
-                        {originalHeader}
-                        <TrashButton channelId={channelId} channelName={channel.name} />
-                    </View>
-                );
+        // Patch the component that holds the header buttons
+        const ChannelButtons = findByName("ChannelButtons", false);
+        if (ChannelButtons) {
+            patches.push(after("default", ChannelButtons, ([{ channel }], res) => {
+                if (!channel || !Array.isArray(res?.props?.children)) return;
+                
+                // Add our button to the beginning of the existing buttons
+                res.props.children.unshift(<DeletedMessagesButton channel={channel} />);
             }));
         } else {
-            logger.error("MessageLogger: Could not find ChannelHeader component");
+            logger.error("MessageLogger: Could not find ChannelButtons component");
         }
 
-        logger.log("MessageLogger loaded with UI.");
+        logger.log("MessageLogger v1.0.0 loaded.");
     },
     onUnload: () => {
         patches.forEach(p => p?.());
