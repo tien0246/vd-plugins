@@ -71,7 +71,7 @@ export default {
             }
         }));
 
-        // Patch Channel Header to log its component names
+        // Patch Channel Header to log its prop keys
         const ChannelHeader = findByName("ChannelHeader", false);
         if (ChannelHeader) {
             patches.push(after("default", ChannelHeader, (args, res) => {
@@ -83,23 +83,25 @@ export default {
 
                 hasShownAlert = true; // Show the alert only once per session
                 
-                const components = new Set();
+                const propsSet = new Set();
                 findInReactTree(res, (node) => {
-                    const name = node?.type?.name;
-                    if (typeof name === 'string') {
-                        components.add(name);
+                    if (node?.props) {
+                        const keys = Object.keys(node.props);
+                        if (keys.length > 0) {
+                            propsSet.add(`[${keys.join(', ')}]`);
+                        }
                     }
                     return false; // Continue traversal
                 });
 
-                const componentsString = Array.from(components).join('\n');
+                const propsString = Array.from(propsSet).join('\n');
 
                 showConfirmationAlert({
-                    title: "Component Names",
-                    content: componentsString || "No named components found.",
+                    title: "Component Prop Keys",
+                    content: propsString || "No components with props found.",
                     confirmText: "Copy",
                     onConfirm: () => {
-                        clipboard.setString(componentsString);
+                        clipboard.setString(propsString);
                         showToast("Copied to clipboard.");
                     },
                     cancelText: "Close",
