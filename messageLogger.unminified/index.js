@@ -1,4 +1,4 @@
-(function(exports,common,metro,toasts,_vendetta,plugin,patcher,assets,components,ui){'use strict';const { ScrollView, View: View$1, Text } = components.General;
+(function(exports,common,metro,toasts,_vendetta,plugin,patcher,assets,components,ui){'use strict';const { ScrollView, View: View$1, Text } = common.ReactNative;
 const { FormRow, FormDivider } = components.Forms;
 const ChannelStore$1 = metro.findByStoreName("ChannelStore");
 const styles = common.stylesheet.createThemedStyleSheet({
@@ -149,7 +149,7 @@ var index = {
           style: {
             position: "absolute",
             right: 16,
-            top: 13,
+            top: 16,
             zIndex: 1
           }
         }, /* @__PURE__ */ common.React.createElement(components.Forms.FormIcon, {
