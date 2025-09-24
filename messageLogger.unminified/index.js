@@ -1,4 +1,4 @@
-(function(exports,common,metro,_vendetta,plugin,patcher,utils,assets,components,ui){'use strict';const { ScrollView, View, Text } = components.General;
+(function(exports,common,metro,toasts,_vendetta,plugin,patcher,utils,assets,components,ui){'use strict';const { ScrollView, View, Text } = components.General;
 const { FormRow, FormDivider } = components.Forms;
 const ChannelStore = metro.findByStoreName("ChannelStore");
 const styles = common.stylesheet.createThemedStyleSheet({
@@ -123,6 +123,7 @@ var index = {
         const channel = args[0]?.channel;
         if (!channel)
           return;
+        toasts.showToast("Patching Channel Header for MessageLogger UI...", 1);
         const channelId = channel.id;
         const hasDeleted = plugin.storage.deletedMessages[channelId]?.length > 0;
         if (!hasDeleted)
@@ -164,4 +165,4 @@ var index = {
     patches.length = 0;
     _vendetta.logger.log("MessageLogger unloaded.");
   }
-};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro.common,vendetta.metro,vendetta,vendetta.plugin,vendetta.patcher,vendetta.utils,vendetta.ui.assets,vendetta.ui.components,vendetta.ui);
+};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro.common,vendetta.metro,vendetta.ui.toasts,vendetta,vendetta.plugin,vendetta.patcher,vendetta.utils,vendetta.ui.assets,vendetta.ui.components,vendetta.ui);
