@@ -145,7 +145,7 @@ export default {
             logger.error("MessageLogger: Could not find ChannelHeader component");
         }
 
-        logger.log("MessageLogger v1.0.3 loaded.");
+
     },
     onUnload: () => {
         patches.forEach(p => p?.());
