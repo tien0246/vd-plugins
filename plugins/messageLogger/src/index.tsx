@@ -1,5 +1,5 @@
 import { FluxDispatcher, React, ReactNative } from "@vendetta/metro/common";
-import { findByProps, findByName } from "@vendetta/metro";
+import { findByProps, findByName, findByStoreName } from "@vendetta/metro";
 import { showToast } from "@vendetta/ui/toasts";
 import { logger } from "@vendetta";
 import { storage } from "@vendetta/plugin";
@@ -13,6 +13,7 @@ const { TouchableOpacity } = General;
 const ActionSheet = findByProps("openLazy", "hideActionSheet");
 const { ActionSheetRow } = findByProps("ActionSheetRow");
 const Navigation = findByProps("push", "pop");
+const ChannelStore = findByStoreName("ChannelStore");
 
 const CACHE_EXPIRY_MS = 2 * 24 * 60 * 60 * 1000; // 2 days
 
@@ -76,14 +77,12 @@ export default {
         const ChannelHeader = findByName("ChannelHeader", false);
         if (ChannelHeader) {
             patches.push(after("default", ChannelHeader, (args, res) => {
-                // Log the keys of the first props object to find the channel prop
-                const propsKeys = Object.keys(args[0] ?? {}).join(', ');
-                showToast(`CH Props keys: ${propsKeys}`);
+                const channelId = args[0]?.channelId;
+                if (!channelId) return;
 
-                const channel = args[0]?.channel;
+                const channel = ChannelStore.getChannel(channelId);
                 if (!channel) return;
 
-                const channelId = channel.id;
                 const hasDeleted = storage.deletedMessages[channelId]?.length > 0;
                 if (!hasDeleted) return;
 
@@ -92,6 +91,7 @@ export default {
 
                 if (!Array.isArray(title.props.children)) title.props.children = [title.props.children];
                 
+                // Add trash icon button
                 title.props.children.push(
                     <TouchableOpacity
                         onPress={() => {
@@ -100,12 +100,14 @@ export default {
                                 render: () => <DeletedMessagesLog channelId={channelId} />,
                             });
                         }}
-                        style={{ marginRight: 8 }}
+                        style={{ marginLeft: 8 }}
                     >
                         <Forms.FormIcon source={getAssetIDByName("ic_trash_24px")} />
                     </TouchableOpacity>
                 );
             }));
+        } else {
+            logger.error("MessageLogger: Could not find ChannelHeader component");
         }
 
         logger.log("MessageLogger loaded with UI.");
