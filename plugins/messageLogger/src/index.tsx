@@ -75,7 +75,10 @@ export default {
         // Patch Channel Header to add a button
         const ChannelHeader = findByName("ChannelHeader", false);
         if (ChannelHeader) {
-            patches.push(after("default", ChannelHeader, ([{ channel }], res) => {
+            patches.push(after("default", ChannelHeader, (args, res) => {
+                const channel = args[0]?.channel;
+                if (!channel) return;
+
                 const channelId = channel.id;
                 const hasDeleted = storage.deletedMessages[channelId]?.length > 0;
                 if (!hasDeleted) return;
