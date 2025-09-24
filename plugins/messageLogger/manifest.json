@@ -5,14 +5,10 @@
     {
       "name": "tien0246",
       "id": "YOUR_USER_ID_HERE"
-    },
-    {
-      "name": "Vencord Team",
-      "id": "1015973197736964126"
     }
   ],
   "main": "src/index.tsx",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "vendetta": {
     "icon": "ic_audit_log_24px"
   }

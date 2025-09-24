@@ -1,16 +1,17 @@
 import { FluxDispatcher, React, ReactNative, NavigationNative } from "@vendetta/metro/common";
-import { findByName, findByStoreName } from "@vendetta/metro";
+import { findByProps, findByName, findByStoreName } from "@vendetta/metro";
 import { logger } from "@vendetta";
 import { storage } from "@vendetta/plugin";
-import { after } from "@vendetta/patcher";
+import { instead } from "@vendetta/patcher";
 import { getAssetIDByName } from "@vendetta/ui/assets";
 import { Forms, General } from "@vendetta/ui/components";
 import { useProxy } from "@vendetta/storage";
 import DeletedMessagesLog from "./DeletedMessagesLog.tsx";
 
-const { TouchableOpacity } = General;
+const { TouchableOpacity, View } = General;
+const ChannelStore = findByStoreName("ChannelStore");
 
-const CACHE_EXPIRY_MS = 2 * 24 * 60 * 60 * 1000; // 2 days
+const CACHE_EXPIRY_MS = 2 * 24 * 60 * 60 * 1000;
 
 storage.messageCache ??= {};
 storage.deletedMessages ??= {};
@@ -43,8 +44,7 @@ function cacheMessage(message) {
     };
 }
 
-// The button component that will be injected
-function DeletedMessagesButton({ channel }) {
+function TrashButton({ channel }) {
     useProxy(storage); // Re-render when storage changes
     const navigation = NavigationNative.useNavigation();
 
@@ -59,8 +59,9 @@ function DeletedMessagesButton({ channel }) {
                     render: () => <DeletedMessagesLog channelId={channel.id} />,
                 });
             }}
+            style={{ position: 'absolute', right: 50, top: 18, zIndex: 1 }} // Adjusted coordinates
         >
-            <Forms.FormIcon style={{ marginRight: 16 }} source={getAssetIDByName("ic_trash_24px")} />
+            <Forms.FormIcon source={getAssetIDByName("ic_trash_24px")} />
         </TouchableOpacity>
     );
 }
@@ -88,20 +89,28 @@ export default {
             }
         }));
 
-        // Patch the component that holds the header buttons
-        const ChannelButtons = findByName("ChannelButtons", false);
-        if (ChannelButtons) {
-            patches.push(after("default", ChannelButtons, ([{ channel }], res) => {
-                if (!channel || !Array.isArray(res?.props?.children)) return;
-                
-                // Add our button to the beginning of the existing buttons
-                res.props.children.unshift(<DeletedMessagesButton channel={channel} />);
+        const ChannelHeader = findByName("ChannelHeader", false);
+        if (ChannelHeader) {
+            patches.push(instead("default", ChannelHeader, (args, orig) => {
+                const originalHeader = orig(...args);
+                const channelId = args[0]?.channelId;
+                if (!channelId) return originalHeader;
+
+                const channel = ChannelStore.getChannel(channelId);
+                if (!channel) return originalHeader;
+
+                return (
+                    <View style={{ flex: 1 }}>
+                        {originalHeader}
+                        <TrashButton channel={channel} />
+                    </View>
+                );
             }));
         } else {
-            logger.error("MessageLogger: Could not find ChannelButtons component");
+            logger.error("MessageLogger: Could not find ChannelHeader component");
         }
 
-        logger.log("MessageLogger v1.0.0 loaded.");
+        logger.log("MessageLogger v1.0.1 loaded.");
     },
     onUnload: () => {
         patches.forEach(p => p?.());
