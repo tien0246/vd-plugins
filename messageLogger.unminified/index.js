@@ -83,9 +83,12 @@ function TrashButton({ channelId, channelName }) {
   Navigator ??= metro.findByName("Navigator") ?? metro.findByProps("Navigator")?.Navigator;
   getRenderCloseButton ??= metro.findByProps("getRenderCloseButton")?.getRenderCloseButton;
   const handlePress = function() {
-    if (!Navigation || !Navigator || !getRenderCloseButton) {
-      return toasts.showToast("Failed to get navigation modules.");
-    }
+    if (!Navigation)
+      return toasts.showToast("ML Error: Navigation module not found!");
+    if (!Navigator)
+      return toasts.showToast("ML Error: Navigator component not found!");
+    if (!getRenderCloseButton)
+      return toasts.showToast("ML Error: getRenderCloseButton not found!");
     const navigator = function() {
       return /* @__PURE__ */ common.React.createElement(Navigator, {
         initialRouteName: "DeletedMessagesLog",
