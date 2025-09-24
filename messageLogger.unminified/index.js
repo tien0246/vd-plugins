@@ -1,7 +1,7 @@
 (function(exports,common,metro,_vendetta,plugin,patcher,assets,components,ui){'use strict';const { ScrollView, View: View$1, Text } = common.ReactNative;
 const { FormDivider } = components.Forms;
 const ChannelStore$1 = metro.findByStoreName("ChannelStore");
-const styles = common.stylesheet.createThemedStyleSheet({
+const styles$1 = common.stylesheet.createThemedStyleSheet({
   container: {
     flex: 1,
     backgroundColor: ui.semanticColors.BACKGROUND_PRIMARY
@@ -32,21 +32,21 @@ function DeletedMessagesLog({ channelId }) {
   const channel = ChannelStore$1.getChannel(channelId);
   const deletedMessages = plugin.storage.deletedMessages?.[channelId] ?? [];
   return /* @__PURE__ */ common.React.createElement(ScrollView, {
-    style: styles.container
+    style: styles$1.container
   }, deletedMessages.length > 0 ? deletedMessages.map(function(msg, index) {
     return /* @__PURE__ */ common.React.createElement(common.React.Fragment, {
       key: msg.id + index
     }, /* @__PURE__ */ common.React.createElement(View$1, {
-      style: styles.logEntry
+      style: styles$1.logEntry
     }, /* @__PURE__ */ common.React.createElement(Text, {
-      style: styles.author
+      style: styles$1.author
     }, msg.author), /* @__PURE__ */ common.React.createElement(Text, {
-      style: styles.content
+      style: styles$1.content
     }, msg.content), /* @__PURE__ */ common.React.createElement(Text, {
-      style: styles.timestamp
+      style: styles$1.timestamp
     }, "Deleted at: ", new Date(msg.deletedTimestamp).toLocaleString())), /* @__PURE__ */ common.React.createElement(FormDivider, null));
   }) : /* @__PURE__ */ common.React.createElement(Text, {
-    style: styles.emptyState
+    style: styles$1.emptyState
   }, "No deleted messages logged for #", channel?.name, "."));
 }const { TouchableOpacity, View } = components.General;
 const ChannelStore = metro.findByStoreName("ChannelStore");
@@ -55,6 +55,19 @@ const CACHE_EXPIRY_MS = 2 * 24 * 60 * 60 * 1e3;
 plugin.storage.messageCache ??= {};
 plugin.storage.deletedMessages ??= {};
 const patches = [];
+const styles = common.stylesheet.createThemedStyleSheet({
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: ui.semanticColors.BACKGROUND_MODIFIER_ACCENT,
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  icon: {
+    tintColor: ui.semanticColors.INTERACTIVE_NORMAL
+  }
+});
 function pruneCache() {
   const now = Date.now();
   Object.keys(plugin.storage.messageCache).forEach(function(id) {
@@ -114,12 +127,15 @@ function TrashButton({ channel }) {
     style: {
       position: "absolute",
       right: 50,
-      top: 18,
+      top: 8,
       zIndex: 1
     }
+  }, /* @__PURE__ */ common.React.createElement(View, {
+    style: styles.iconContainer
   }, /* @__PURE__ */ common.React.createElement(components.Forms.FormIcon, {
+    style: styles.icon,
     source: assets.getAssetIDByName("ic_trash_24px")
-  }));
+  })));
 }
 var index = {
   onLoad: function() {
@@ -182,7 +198,7 @@ var index = {
     } else {
       _vendetta.logger.error("MessageLogger: Could not find ChannelHeader component");
     }
-    _vendetta.logger.log("MessageLogger v1.0.2 loaded.");
+    _vendetta.logger.log("MessageLogger v1.0.3 loaded.");
   },
   onUnload: function() {
     patches.forEach(function(p) {
