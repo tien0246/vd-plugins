@@ -86,10 +86,20 @@ export default {
                 const hasDeleted = storage.deletedMessages[channelId]?.length > 0;
                 if (!hasDeleted) return;
 
-                const originalChildren = res?.props?.children;
-                if (!originalChildren) return;
+                const toolbar = findInReactTree(res, r => r?.type?.name === "Toolbar");
+                if (!toolbar) {
+                    showToast("ML: FAILED to find Toolbar");
+                    return;
+                }
+                showToast("ML: Found Toolbar");
 
-                const trashButton = (
+                if (!Array.isArray(toolbar.props.children)) {
+                    showToast("ML: Toolbar children not an array");
+                    return;
+                }
+
+                // Add trash icon button to the toolbar
+                toolbar.props.children.push(
                     <TouchableOpacity
                         onPress={() => {
                             Navigation.push("VendettaCustomPage", {
@@ -97,18 +107,11 @@ export default {
                                 render: () => <DeletedMessagesLog channelId={channelId} />,
                             });
                         }}
-                        style={{ position: 'absolute', right: 12, top: 12, zIndex: 1 }}
                     >
                         <Forms.FormIcon source={getAssetIDByName("ic_trash_24px")} />
                     </TouchableOpacity>
                 );
-
-                res.props.children = (
-                    <React.Fragment>
-                        {originalChildren}
-                        {trashButton}
-                    </React.Fragment>
-                );
+                showToast("ML: Pushed button to Toolbar");
             }));
         } else {
             logger.error("MessageLogger: Could not find ChannelHeader component");
