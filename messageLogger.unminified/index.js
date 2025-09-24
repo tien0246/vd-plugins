@@ -39,7 +39,7 @@ function DeletedMessagesLog({ channelId }) {
       style: styles$1.logEntry
     }, /* @__PURE__ */ common.React.createElement(Text, {
       style: styles$1.author
-    }, msg.author), /* @__PURE__ */ common.React.createElement(View$1, {
+    }, msg.author), /* @__PURE__ */ common.React.createElement(Text, {
       style: styles$1.contentContainer
     }, Parser.parse(msg.content, true, {
       channelId
