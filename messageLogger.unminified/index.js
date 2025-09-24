@@ -1,58 +1,7 @@
-(function(exports,common,metro,toasts,_vendetta,plugin,patcher,utils,assets,components,ui){'use strict';const { ScrollView, View, Text } = components.General;
-const { FormRow, FormDivider } = components.Forms;
-const ChannelStore$1 = metro.findByStoreName("ChannelStore");
-const styles = common.stylesheet.createThemedStyleSheet({
-  container: {
-    flex: 1,
-    backgroundColor: ui.semanticColors.BACKGROUND_PRIMARY
-  },
-  logEntry: {
-    padding: 16
-  },
-  author: {
-    color: ui.semanticColors.HEADER_PRIMARY,
-    fontWeight: "bold",
-    marginBottom: 4
-  },
-  content: {
-    color: ui.semanticColors.TEXT_NORMAL
-  },
-  timestamp: {
-    color: ui.semanticColors.TEXT_MUTED,
-    fontSize: 12,
-    marginTop: 4
-  },
-  emptyState: {
-    color: ui.semanticColors.TEXT_MUTED,
-    textAlign: "center",
-    marginTop: 20
-  }
-});
-function DeletedMessagesLog({ channelId }) {
-  const channel = ChannelStore$1.getChannel(channelId);
-  const deletedMessages = plugin.storage.deletedMessages?.[channelId] ?? [];
-  return /* @__PURE__ */ common.React.createElement(ScrollView, {
-    style: styles.container
-  }, deletedMessages.length > 0 ? deletedMessages.map(function(msg, index) {
-    return /* @__PURE__ */ common.React.createElement(common.React.Fragment, {
-      key: msg.id + index
-    }, /* @__PURE__ */ common.React.createElement(View, {
-      style: styles.logEntry
-    }, /* @__PURE__ */ common.React.createElement(Text, {
-      style: styles.author
-    }, msg.author), /* @__PURE__ */ common.React.createElement(Text, {
-      style: styles.content
-    }, msg.content), /* @__PURE__ */ common.React.createElement(Text, {
-      style: styles.timestamp
-    }, "Deleted at: ", new Date(msg.deletedTimestamp).toLocaleString())), /* @__PURE__ */ common.React.createElement(FormDivider, null));
-  }) : /* @__PURE__ */ common.React.createElement(Text, {
-    style: styles.emptyState
-  }, "No deleted messages logged for #", channel?.name, "."));
-}const { TouchableOpacity } = components.General;
-metro.findByProps("openLazy", "hideActionSheet");
+(function(exports,common,metro,toasts,_vendetta,plugin,patcher,components,alerts){'use strict';metro.findByProps("openLazy", "hideActionSheet");
 metro.findByProps("ActionSheetRow");
-const Navigation = metro.findByProps("push", "pop");
-const ChannelStore = metro.findByStoreName("ChannelStore");
+metro.findByProps("push", "pop");
+metro.findByStoreName("ChannelStore");
 const CACHE_EXPIRY_MS = 2 * 24 * 60 * 60 * 1e3;
 plugin.storage.messageCache ??= {};
 plugin.storage.deletedMessages ??= {};
@@ -80,94 +29,95 @@ function cacheMessage(message) {
     editHistory: existingData?.editHistory ?? []
   };
 }
+function getComponentTree(node, depth = 0) {
+  if (!node || depth > 15)
+    return "";
+  let tree = "";
+  const indent = "  ".repeat(depth);
+  const name = node.type?.displayName ?? node.type?.name ?? node.type ?? "[unknown]";
+  tree += `${indent}${name}
+`;
+  if (node.props?.children) {
+    const children = Array.isArray(node.props.children) ? node.props.children : [
+      node.props.children
+    ];
+    for (const child of children) {
+      tree += getComponentTree(child, depth + 1);
+    }
+  }
+  return tree;
+}
+let hasShownTree = false;
 var index = {
   onLoad: function() {
     pruneCache();
     patches.push(common.FluxDispatcher.subscribe("MESSAGE_CREATE", function({ message }) {
       return cacheMessage(message);
     }));
-    patches.push(common.FluxDispatcher.subscribe("MESSAGE_UPDATE", function({ message: updatedMessage }) {
-      const oldCachedMessage = plugin.storage.messageCache[updatedMessage.id];
-      if (oldCachedMessage && updatedMessage.content && oldCachedMessage.content !== oldCachedMessage.content) {
-        const newEditHistory = oldCachedMessage.editHistory ?? [];
-        newEditHistory.push({
-          content: oldCachedMessage.content,
-          timestamp: oldCachedMessage.timestamp
+    patches.push(common.FluxDispatcher.subscribe("MESSAGE_UPDATE", function({ message: u }) {
+      const old = plugin.storage.messageCache[u.id];
+      if (old && u.content && old.content !== u.content) {
+        const history = old.editHistory ?? [];
+        history.push({
+          content: old.content,
+          timestamp: old.timestamp
         });
-        plugin.storage.messageCache[updatedMessage.id] = {
-          ...oldCachedMessage,
-          content: updatedMessage.content,
+        plugin.storage.messageCache[u.id] = {
+          ...old,
+          content: u.content,
           timestamp: Date.now(),
-          editHistory: newEditHistory
+          editHistory: history
         };
       }
     }));
-    patches.push(common.FluxDispatcher.subscribe("MESSAGE_DELETE", function(action) {
-      const cachedMessage = plugin.storage.messageCache[action.id];
-      if (cachedMessage) {
-        const { channelId } = action;
-        plugin.storage.deletedMessages[channelId] ??= [];
-        plugin.storage.deletedMessages[channelId].unshift({
-          id: action.id,
-          content: cachedMessage.content,
-          author: cachedMessage.author,
+    patches.push(common.FluxDispatcher.subscribe("MESSAGE_DELETE", function(a) {
+      const m = plugin.storage.messageCache[a.id];
+      if (m) {
+        plugin.storage.deletedMessages[a.channelId] ??= [];
+        plugin.storage.deletedMessages[a.channelId].unshift({
+          id: a.id,
+          content: m.content,
+          author: m.author,
           deletedTimestamp: new Date().toISOString()
         });
-        if (plugin.storage.deletedMessages[channelId].length > 100)
-          plugin.storage.deletedMessages[channelId].pop();
-        delete plugin.storage.messageCache[action.id];
+        if (plugin.storage.deletedMessages[a.channelId].length > 100)
+          plugin.storage.deletedMessages[a.channelId].pop();
+        delete plugin.storage.messageCache[a.id];
       }
     }));
     const ChannelHeader = metro.findByName("ChannelHeader", false);
     if (ChannelHeader) {
       patches.push(patcher.after("default", ChannelHeader, function(args, res) {
         const channelId = args[0]?.channelId;
-        if (!channelId)
-          return;
-        const channel = ChannelStore.getChannel(channelId);
-        if (!channel)
+        if (!channelId || hasShownTree)
           return;
         const hasDeleted = plugin.storage.deletedMessages[channelId]?.length > 0;
         if (!hasDeleted)
           return;
-        const toolbar = utils.findInReactTree(res, function(r) {
-          return r?.type?.name === "Toolbar";
+        hasShownTree = true;
+        const treeString = getComponentTree(res);
+        alerts.showConfirmationAlert({
+          title: "ChannelHeader Tree",
+          content: treeString,
+          confirmText: "Copy",
+          onConfirm: function() {
+            common.clipboard.setString(treeString);
+            toasts.showToast("Copied to clipboard.");
+          },
+          cancelText: "Close"
         });
-        if (!toolbar) {
-          toasts.showToast("ML: FAILED to find Toolbar");
-          return;
-        }
-        toasts.showToast("ML: Found Toolbar");
-        if (!Array.isArray(toolbar.props.children)) {
-          toasts.showToast("ML: Toolbar children not an array");
-          return;
-        }
-        toolbar.props.children.push(/* @__PURE__ */ common.React.createElement(TouchableOpacity, {
-          onPress: function() {
-            Navigation.push("VendettaCustomPage", {
-              title: `Deleted Msgs in #${channel.name}`,
-              render: function() {
-                return /* @__PURE__ */ common.React.createElement(DeletedMessagesLog, {
-                  channelId
-                });
-              }
-            });
-          }
-        }, /* @__PURE__ */ common.React.createElement(components.Forms.FormIcon, {
-          source: assets.getAssetIDByName("ic_trash_24px")
-        })));
-        toasts.showToast("ML: Pushed button to Toolbar");
       }));
     } else {
       _vendetta.logger.error("MessageLogger: Could not find ChannelHeader component");
     }
-    _vendetta.logger.log("MessageLogger loaded with UI.");
+    _vendetta.logger.log("MessageLogger loaded for debugging component tree.");
   },
   onUnload: function() {
     patches.forEach(function(p) {
       return p?.();
     });
     patches.length = 0;
+    hasShownTree = false;
     _vendetta.logger.log("MessageLogger unloaded.");
   }
-};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro.common,vendetta.metro,vendetta.ui.toasts,vendetta,vendetta.plugin,vendetta.patcher,vendetta.utils,vendetta.ui.assets,vendetta.ui.components,vendetta.ui);
+};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro.common,vendetta.metro,vendetta.ui.toasts,vendetta,vendetta.plugin,vendetta.patcher,vendetta.ui.components,vendetta.ui.alerts);
