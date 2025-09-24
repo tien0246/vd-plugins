@@ -17,10 +17,13 @@ function pruneCache() {
 function cacheMessage(message) {
   if (!message?.id || !message.content || message.author?.bot)
     return;
+  const existingData = plugin.storage.messageCache[message.id];
   plugin.storage.messageCache[message.id] = {
     content: message.content,
     author: message.author?.username ?? "unknown",
-    timestamp: Date.now()
+    timestamp: Date.now(),
+    // Preserve existing edit history
+    editHistory: existingData?.editHistory ?? []
   };
 }
 var index = {
@@ -29,9 +32,21 @@ var index = {
     patches.push(common.FluxDispatcher.subscribe("MESSAGE_CREATE", function({ message }) {
       cacheMessage(message);
     }));
-    patches.push(common.FluxDispatcher.subscribe("MESSAGE_UPDATE", function({ message }) {
-      if (message.content && plugin.storage.messageCache[message.id]) {
-        cacheMessage(message);
+    patches.push(common.FluxDispatcher.subscribe("MESSAGE_UPDATE", function({ message: updatedMessage }) {
+      const oldCachedMessage = plugin.storage.messageCache[updatedMessage.id];
+      if (oldCachedMessage && updatedMessage.content && oldCachedMessage.content !== updatedMessage.content) {
+        const newEditHistory = oldCachedMessage.editHistory ?? [];
+        newEditHistory.push({
+          content: oldCachedMessage.content,
+          timestamp: oldCachedMessage.timestamp
+        });
+        plugin.storage.messageCache[updatedMessage.id] = {
+          ...oldCachedMessage,
+          content: updatedMessage.content,
+          timestamp: Date.now(),
+          editHistory: newEditHistory
+        };
+        toasts.showToast(`Edited: ${oldCachedMessage.content.slice(0, 20)}... -> ${updatedMessage.content.slice(0, 20)}...`);
       }
     }));
     patches.push(common.FluxDispatcher.subscribe("MESSAGE_DELETE", function(action) {
