@@ -1,1 +1,1 @@
-{"name":"Hidden channels","description":"View the name and description of channels you can't access (v2)","authors":[{"name":"cloudburst","id":"892128204150685769"}],"main":"index.js","vendetta":{"icon":"ic_lock"},"hash":"78aafa2ed51930e02cc1e2a8bc45c24b68188d56df1ed0fd81017a380e083d67"}
+{"name":"Hidden channels","description":"View the name and description of channels you can't access","authors":[{"name":"cloudburst","id":"892128204150685769"}],"main":"index.js","vendetta":{"icon":"ic_lock"},"hash":"0318949441ca75cdd8bc05d803d92153143c877a3fb68f06c64a770eb3a484e6"}

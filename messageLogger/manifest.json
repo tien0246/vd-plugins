@@ -1,0 +1,1 @@
+{"name":"MessageLogger","description":"Logs deleted and edited messages. (Ported from Vencord)","authors":[{"name":"tien0246","id":"YOUR_USER_ID_HERE"},{"name":"Vencord Team","id":"1015973197736964126"}],"main":"index.js","vendetta":{"icon":"ic_audit_log_24px"},"hash":"4e45a6a8bd91a407fa9b300d56a489603bda0d8b073f0d2d7aef8c7526a4f154"}

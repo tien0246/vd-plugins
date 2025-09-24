@@ -1,4 +1,4 @@
-(function(exports,metro,common,patcher,toasts,ui,assets){'use strict';const { View, Text, Pressable } = metro.findByProps("Button", "Text", "View");
+(function(exports,metro,common,patcher,_vendetta,ui,assets){'use strict';const { View, Text, Pressable } = metro.findByProps("Button", "Text", "View");
 const snowflakeUtils = metro.findByProps("extractTimestamp");
 const MessageStyles = common.stylesheet.createThemedStyleSheet({
   "container": {
@@ -65,7 +65,7 @@ function isHidden(channelIdOrObject) {
   const ChannelTypes = metro.findByProps("ChannelTypes")?.ChannelTypes;
   const Permissions = metro.findByProps("getChannelPermissions", "can");
   if (!getChannel || !ChannelTypes || !Permissions) {
-    toasts.showToast("hidden-channels: Could not find core modules");
+    _vendetta.logger.error("hidden-channels: Could not find core modules for isHidden check.");
     return false;
   }
   let channel = channelIdOrObject;
@@ -83,7 +83,6 @@ function isHidden(channelIdOrObject) {
   return res;
 }
 function onLoad() {
-  toasts.showToast("hidden-channels: onLoad called (v1)");
   try {
     const Permissions = metro.findByProps("getChannelPermissions", "can");
     if (Permissions) {
@@ -93,7 +92,7 @@ function onLoad() {
         return res;
       }));
     } else {
-      toasts.showToast("hidden-channels: Failed to find Permissions module");
+      _vendetta.logger.error("hidden-channels: Failed to find Permissions module");
     }
     const Router = metro.findByProps("transitionToGuild");
     if (Router) {
@@ -103,7 +102,7 @@ function onLoad() {
           orig(...args);
       }));
     } else {
-      toasts.showToast("hidden-channels: Failed to find Router module");
+      _vendetta.logger.error("hidden-channels: Failed to find Router module");
     }
     const Fetcher = metro.findByProps("stores", "fetchMessages");
     if (Fetcher) {
@@ -113,7 +112,7 @@ function onLoad() {
           orig(...args);
       }));
     } else {
-      toasts.showToast("hidden-channels: Failed to find Fetcher module");
+      _vendetta.logger.error("hidden-channels: Failed to find Fetcher module");
     }
     const MessagesConnected = metro.findByName("ChannelMessages", false);
     if (MessagesConnected) {
@@ -127,10 +126,10 @@ function onLoad() {
           });
       }));
     } else {
-      toasts.showToast("hidden-channels: Failed to find MessagesConnected");
+      _vendetta.logger.error("hidden-channels: Failed to find ChannelMessages component");
     }
   } catch (e) {
-    toasts.showToast(`hidden-channels: onLoad error: ${e.message}`);
+    _vendetta.logger.error(`hidden-channels: onLoad error: ${e.message}`, e);
   }
 }
 var index = {
@@ -140,4 +139,4 @@ var index = {
       unpatch();
     }
   }
-};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro,vendetta.metro.common,vendetta.patcher,vendetta.ui.toasts,vendetta.ui,vendetta.ui.assets);
+};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro,vendetta.metro.common,vendetta.patcher,vendetta,vendetta.ui,vendetta.ui.assets);

@@ -68,10 +68,20 @@ View raw message data
 
 ## [Hidden channels](https://tien0246.github.io/vd-plugins/hidden-channels)
 
-View the name and description of channels you can't access (v2)
+View the name and description of channels you can't access
 
 **Status:** ⛱️ Stable
 
 `https://tien0246.github.io/vd-plugins/hidden-channels`
 
 <button onClick="navigator.clipboard.writeText('https://tien0246.github.io/vd-plugins/hidden-channels')">📥 Copy install URL</button> <a href="https://github.com/aliernfrog/vd-plugins/tree/master/plugins/hidden-channels"><button>🧪 Source code</button></a>
+
+## [MessageLogger](https://tien0246.github.io/vd-plugins/messageLogger)
+
+Logs deleted and edited messages. (Ported from Vencord)
+
+**Status:** ⛱️ Stable
+
+`https://tien0246.github.io/vd-plugins/messageLogger`
+
+<button onClick="navigator.clipboard.writeText('https://tien0246.github.io/vd-plugins/messageLogger')">📥 Copy install URL</button> <a href="https://github.com/aliernfrog/vd-plugins/tree/master/plugins/messageLogger"><button>🧪 Source code</button></a>
