@@ -78,7 +78,7 @@ View the name and description of channels you can't access
 
 ## [MessageLogger](https://tien0246.github.io/vd-plugins/messageLogger)
 
-Logs deleted and edited messages. (Ported from Vencord) (v16)
+Logs deleted and edited messages. (Ported from Vencord) (v17)
 
 **Status:** ⛱️ Stable
 
