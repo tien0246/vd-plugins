@@ -1,4 +1,4 @@
-(function(metro,common,patcher,_vendetta,ui){'use strict';metro.findByProps("Button", "Text", "View");
+(function(metro,common,patcher,toasts,ui){'use strict';metro.findByProps("Button", "Text", "View");
 metro.findByProps("extractTimestamp");
 common.stylesheet.createThemedStyleSheet({
   "container": {
@@ -26,4 +26,4 @@ common.stylesheet.createThemedStyleSheet({
     "alignSelf": "baseline"
   }
 });metro.findByProps("getChannel")?.getChannel;
-metro.findByProps("ChannelTypes")?.ChannelTypes;})(vendetta.metro,vendetta.metro.common,vendetta.patcher,vendetta,vendetta.ui);
+metro.findByProps("ChannelTypes")?.ChannelTypes;})(vendetta.metro,vendetta.metro.common,vendetta.patcher,vendetta.ui.toasts,vendetta.ui);
