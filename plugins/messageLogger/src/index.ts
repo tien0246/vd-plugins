@@ -2,21 +2,13 @@ import { FluxDispatcher } from "@vendetta/metro/common";
 import { findByStoreName } from "@vendetta/metro";
 import { showToast } from "@vendetta/ui/toasts";
 import { logger } from "@vendetta";
-
-let unpatch;
-
-export default {
-import { FluxDispatcher } from "@vendetta/metro/common";
-import { findByStoreName } from "@vendetta/metro";
-import { showToast } from "@vendetta/ui/toasts";
-import { logger } from "@vendetta";
 import { before } from "@vendetta/patcher";
 
 let unpatch;
 
 export default {
     onLoad: () => {
-        showToast("MessageLogger: onLoad called (v3)");
+        showToast("MessageLogger: onLoad called (v4)");
         const MessageStore = findByStoreName("MessageStore");
 
         if (!MessageStore) {
@@ -34,7 +26,6 @@ export default {
                     const author = message.author?.username ?? "unknown";
                     showToast(`Deleted from ${author}: ${message.content}`);
                 } else {
-                    // This case shouldn't happen now, but we keep it for safety
                     showToast(`ML: Deleted msg [${action.id}] not in cache or has no content.`);
                 }
             } catch (e) {
@@ -47,4 +38,4 @@ export default {
         unpatch?.();
         logger.log("MessageLogger unloaded.");
     }
-}
+};
