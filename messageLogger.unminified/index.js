@@ -1,15 +1,16 @@
-(function(exports,common,metro,toasts,_vendetta){'use strict';let unpatch;
+(function(exports,common,metro,toasts,_vendetta,patcher){'use strict';let unpatch;
 var index = {
   onLoad: function() {
-    toasts.showToast("MessageLogger: onLoad called (v2)");
-    _vendetta.logger.log("MessageLogger loaded.");
+    toasts.showToast("MessageLogger: onLoad called (v4)");
     const MessageStore = metro.findByStoreName("MessageStore");
     if (!MessageStore) {
       toasts.showToast("ML Error: Could not find MessageStore!");
       return;
     }
-    unpatch = common.FluxDispatcher.subscribe("MESSAGE_DELETE", function(action) {
-      toasts.showToast("ML: MESSAGE_DELETE received!");
+    unpatch = patcher.before("dispatch", common.FluxDispatcher, function(args) {
+      const action = args[0];
+      if (action.type !== "MESSAGE_DELETE")
+        return;
       try {
         const message = MessageStore.getMessage(action.channelId, action.id);
         if (message && message.content) {
@@ -28,4 +29,4 @@ var index = {
     unpatch?.();
     _vendetta.logger.log("MessageLogger unloaded.");
   }
-};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro.common,vendetta.metro,vendetta.ui.toasts,vendetta);
+};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro.common,vendetta.metro,vendetta.ui.toasts,vendetta,vendetta.patcher);
