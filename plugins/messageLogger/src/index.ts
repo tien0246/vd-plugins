@@ -1,78 +1,73 @@
 import { FluxDispatcher } from "@vendetta/metro/common";
 import { showToast } from "@vendetta/ui/toasts";
 import { logger } from "@vendetta";
+import { storage } from "@vendetta/plugin";
 
-// Cache to hold recent messages. Maps messageId -> { content, author, timerId }
-const messageCache = new Map();
 // Expire messages from cache after 15 minutes
 const CACHE_EXPIRY_MS = 15 * 60 * 1000;
 
+// Initialize storage if it doesn't exist
+storage.messageCache ??= {};
+
 const patches = [];
+
+function pruneCache() {
+    const now = Date.now();
+    let prunedCount = 0;
+    for (const id in storage.messageCache) {
+        if (now - storage.messageCache[id].timestamp > CACHE_EXPIRY_MS) {
+            delete storage.messageCache[id];
+            prunedCount++;
+        }
+    }
+    if (prunedCount > 0) {
+        logger.log(`MessageLogger: Pruned ${prunedCount} expired messages from cache.`);
+    }
+}
 
 function cacheMessage(message) {
     // Only cache messages with content from regular users
     if (!message?.id || !message.content || message.author?.bot) return;
 
-    // If a timer already exists for this message (e.g., an edit), clear it to reset the expiry
-    if (messageCache.has(message.id)) {
-        const existing = messageCache.get(message.id);
-        clearTimeout(existing.timer);
-    }
-
-    // Set a timer to automatically remove the message from the cache to prevent memory leaks
-    const timer = setTimeout(() => {
-        messageCache.delete(message.id);
-    }, CACHE_EXPIRY_MS);
-
-    messageCache.set(message.id, {
+    storage.messageCache[message.id] = {
         content: message.content,
         author: message.author?.username ?? "unknown",
-        timer: timer,
-    });
+        timestamp: Date.now(),
+    };
 }
 
 export default {
     onLoad: () => {
-        // Listen for new messages to cache them
+        // Prune old messages from the cache on load
+        pruneCache();
+
         patches.push(FluxDispatcher.subscribe("MESSAGE_CREATE", ({ message }) => {
             cacheMessage(message);
         }));
 
-        // Listen for updated messages to update the cache
         patches.push(FluxDispatcher.subscribe("MESSAGE_UPDATE", ({ message }) => {
-            // The MESSAGE_UPDATE event often has partial data, so we only cache if content is present
-            if (message.content) {
+            // Only update the cache if the message exists and has content
+            if (message.content && storage.messageCache[message.id]) {
                 cacheMessage(message);
             }
         }));
 
-        // Listen for deleted messages
         patches.push(FluxDispatcher.subscribe("MESSAGE_DELETE", (action) => {
-            if (messageCache.has(action.id)) {
-                const cachedMessage = messageCache.get(action.id);
+            if (storage.messageCache[action.id]) {
+                const cachedMessage = storage.messageCache[action.id];
                 showToast(`Deleted from ${cachedMessage.author}: ${cachedMessage.content}`);
                 
-                // Clean up the cache and timer immediately after logging
-                clearTimeout(cachedMessage.timer);
-                messageCache.delete(action.id);
+                delete storage.messageCache[action.id];
             }
         }));
 
-        logger.log("MessageLogger loaded with caching strategy.");
+        logger.log("MessageLogger loaded with persistent storage strategy.");
     },
     onUnload: () => {
-        // Unsubscribe from all events
         for (const unpatch of patches) {
             unpatch?.();
         }
         patches.length = 0;
-
-        // Clear all pending timers and empty the cache to prevent memory leaks
-        for (const [_id, cachedMessage] of messageCache) {
-            clearTimeout(cachedMessage.timer);
-        }
-        messageCache.clear();
-        
-        logger.log("MessageLogger unloaded and cache cleared.");
+        logger.log("MessageLogger unloaded.");
     }
 };
