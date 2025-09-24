@@ -23,9 +23,9 @@ const patches = [];
 
 const styles = stylesheet.createThemedStyleSheet({
     iconContainer: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
+        width: 32,
+        height: 32,
+        borderRadius: 16,
         backgroundColor: semanticColors.BACKGROUND_MODIFIER_ACCENT,
         justifyContent: 'center',
         alignItems: 'center',
@@ -89,7 +89,7 @@ function TrashButton({ channel }) {
     return (
         <TouchableOpacity
             onPress={handlePress}
-            style={{ position: 'absolute', right: 16, top: 18, zIndex: 1 }}
+            style={{ position: 'absolute', right: 16, top: 16, zIndex: 1 }}
         >
             <View style={styles.iconContainer}>
                 <Forms.FormIcon style={styles.icon} source={getAssetIDByName("ic_trash_24px")} />
