@@ -5,7 +5,7 @@ import { storage } from "@vendetta/plugin";
 import { instead } from "@vendetta/patcher";
 import { getAssetIDByName } from "@vendetta/ui/assets";
 import { Forms, General } from "@vendetta/ui/components";
-import { showDialog } from "../../lib/ui/AlertDialog.tsx";
+import { showDialog } from "../../../lib/ui/AlertDialog.tsx";
 
 const { TouchableOpacity, View } = General;
 const ChannelStore = findByStoreName("ChannelStore");
