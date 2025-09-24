@@ -4,7 +4,7 @@ import { storage } from "@vendetta/plugin";
 import { Forms, General } from "@vendetta/ui/components";
 import { semanticColors } from "@vendetta/ui";
 
-const { ScrollView, View, Text } = General;
+const { ScrollView, View, Text } = ReactNative;
 const { FormRow, FormDivider } = Forms;
 const ChannelStore = findByStoreName("ChannelStore");
 

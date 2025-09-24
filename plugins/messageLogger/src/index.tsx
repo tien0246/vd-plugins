@@ -96,7 +96,7 @@ export default {
                                 render: () => <DeletedMessagesLog channelId={channelId} />,
                             });
                         }}
-                        style={{ position: 'absolute', right: 16, top: 13, zIndex: 1 }}
+                        style={{ position: 'absolute', right: 16, top: 16, zIndex: 1 }}
                     >
                         <Forms.FormIcon source={getAssetIDByName("ic_trash_24px")} />
                     </TouchableOpacity>
