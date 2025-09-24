@@ -1,7 +1,7 @@
 (function(exports,common,metro,toasts,_vendetta,patcher){'use strict';let unpatch;
 var index = {
   onLoad: function() {
-    toasts.showToast("MessageLogger: onLoad called (v4)");
+    toasts.showToast("MessageLogger: onLoad called (v5)");
     const MessageStore = metro.findByStoreName("MessageStore");
     if (!MessageStore) {
       toasts.showToast("ML Error: Could not find MessageStore!");
