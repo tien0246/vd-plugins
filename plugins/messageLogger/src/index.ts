@@ -8,7 +8,7 @@ let unpatch;
 
 export default {
     onLoad: () => {
-        showToast("MessageLogger: onLoad called (v4)");
+        showToast("MessageLogger: onLoad called (v5)");
         const MessageStore = findByStoreName("MessageStore");
 
         if (!MessageStore) {
