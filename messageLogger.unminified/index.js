@@ -119,7 +119,10 @@ var index = {
     }));
     const ChannelHeader = metro.findByName("ChannelHeader", false);
     if (ChannelHeader) {
-      patches.push(patcher.after("default", ChannelHeader, function([{ channel }], res) {
+      patches.push(patcher.after("default", ChannelHeader, function(args, res) {
+        const channel = args[0]?.channel;
+        if (!channel)
+          return;
         const channelId = channel.id;
         const hasDeleted = plugin.storage.deletedMessages[channelId]?.length > 0;
         if (!hasDeleted)
