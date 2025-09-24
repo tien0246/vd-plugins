@@ -16,8 +16,10 @@ var index = {
         if (message && message.content) {
           const author = message.author?.username ?? "unknown";
           toasts.showToast(`Deleted from ${author}: ${message.content}`);
+        } else if (message) {
+          toasts.showToast(`ML: Deleted msg [${action.id}] has no text content.`);
         } else {
-          toasts.showToast(`ML: Deleted msg [${action.id}] not in cache or has no content.`);
+          toasts.showToast(`ML: Deleted msg [${action.id}] not in cache.`);
         }
       } catch (e) {
         _vendetta.logger.error("MessageLogger: Error in MESSAGE_DELETE", e);
