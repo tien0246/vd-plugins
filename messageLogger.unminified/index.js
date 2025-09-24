@@ -120,10 +120,11 @@ var index = {
     const ChannelHeader = metro.findByName("ChannelHeader", false);
     if (ChannelHeader) {
       patches.push(patcher.after("default", ChannelHeader, function(args, res) {
+        const propsKeys = Object.keys(args[0] ?? {}).join(", ");
+        toasts.showToast(`CH Props keys: ${propsKeys}`);
         const channel = args[0]?.channel;
         if (!channel)
           return;
-        toasts.showToast("Patching Channel Header for MessageLogger UI...", 1);
         const channelId = channel.id;
         const hasDeleted = plugin.storage.deletedMessages[channelId]?.length > 0;
         if (!hasDeleted)
