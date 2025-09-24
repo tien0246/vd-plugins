@@ -71,7 +71,7 @@ export default {
             }
         }));
 
-        // Patch Channel Header to log its prop keys
+        // Patch Channel Header to log its children's prop keys
         const ChannelHeader = findByName("ChannelHeader", false);
         if (ChannelHeader) {
             patches.push(after("default", ChannelHeader, (args, res) => {
@@ -83,22 +83,29 @@ export default {
 
                 hasShownAlert = true; // Show the alert only once per session
                 
+                const children = res?.props?.children;
+                if (!children) {
+                    showToast("No children found in ChannelHeader");
+                    return;
+                }
+
+                const childrenArray = Array.isArray(children) ? children : [children];
                 const propsSet = new Set();
-                findInReactTree(res, (node) => {
-                    if (node?.props) {
-                        const keys = Object.keys(node.props);
+
+                for (const child of childrenArray) {
+                    if (child?.props) {
+                        const keys = Object.keys(child.props);
                         if (keys.length > 0) {
                             propsSet.add(`[${keys.join(', ')}]`);
                         }
                     }
-                    return false; // Continue traversal
-                });
+                }
 
                 const propsString = Array.from(propsSet).join('\n');
 
                 showConfirmationAlert({
-                    title: "Component Prop Keys",
-                    content: propsString || "No components with props found.",
+                    title: "Second Level Prop Keys",
+                    content: propsString || "No 2nd-level components with props found.",
                     confirmText: "Copy",
                     onConfirm: () => {
                         clipboard.setString(propsString);
