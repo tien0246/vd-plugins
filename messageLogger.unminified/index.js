@@ -1,4 +1,4 @@
-(function(exports,common,metro,_vendetta,plugin,patcher,assets,components,storage,ui){'use strict';const { ScrollView, View: View$1, Text } = common.ReactNative;
+(function(exports,common,metro,_vendetta,plugin,patcher,assets,components,ui){'use strict';const { ScrollView, View: View$1, Text } = common.ReactNative;
 const { FormDivider } = components.Forms;
 const ChannelStore$1 = metro.findByStoreName("ChannelStore");
 const styles = common.stylesheet.createThemedStyleSheet({
@@ -50,6 +50,7 @@ function DeletedMessagesLog({ channelId }) {
   }, "No deleted messages logged for #", channel?.name, "."));
 }const { TouchableOpacity, View } = components.General;
 const ChannelStore = metro.findByStoreName("ChannelStore");
+let Navigation, Navigator, getRenderCloseButton;
 const CACHE_EXPIRY_MS = 2 * 24 * 60 * 60 * 1e3;
 plugin.storage.messageCache ??= {};
 plugin.storage.deletedMessages ??= {};
@@ -81,22 +82,35 @@ function cacheMessage(message) {
   };
 }
 function TrashButton({ channel }) {
-  storage.useProxy(plugin.storage);
-  const navigation = common.NavigationNative.useNavigation();
-  const hasDeleted = plugin.storage.deletedMessages[channel.id]?.length > 0;
-  if (!hasDeleted)
-    return null;
-  return /* @__PURE__ */ common.React.createElement(TouchableOpacity, {
-    onPress: function() {
-      navigation.push("VendettaCustomPage", {
-        title: `Deleted Msgs in #${channel.name}`,
-        render: function() {
-          return /* @__PURE__ */ common.React.createElement(DeletedMessagesLog, {
-            channelId: channel.id
-          });
+  Navigation ??= metro.findByProps("push", "pushLazy", "pop");
+  Navigator ??= metro.findByName("Navigator") ?? metro.findByProps("Navigator")?.Navigator;
+  getRenderCloseButton ??= metro.findByProps("getRenderCloseButton")?.getRenderCloseButton ?? metro.findByProps("getHeaderCloseButton")?.getHeaderCloseButton;
+  const handlePress = function() {
+    if (!Navigation || !Navigator || !getRenderCloseButton) {
+      return _vendetta.logger.error("MessageLogger: Failed to get navigation modules.");
+    }
+    const navigator = function() {
+      return /* @__PURE__ */ common.React.createElement(Navigator, {
+        initialRouteName: "DeletedMessagesLog",
+        screens: {
+          DeletedMessagesLog: {
+            title: `Deleted Msgs in #${channel.name}`,
+            headerLeft: getRenderCloseButton(function() {
+              return Navigation.pop();
+            }),
+            render: function() {
+              return /* @__PURE__ */ common.React.createElement(DeletedMessagesLog, {
+                channelId: channel.id
+              });
+            }
+          }
         }
       });
-    },
+    };
+    Navigation.push(navigator);
+  };
+  return /* @__PURE__ */ common.React.createElement(TouchableOpacity, {
+    onPress: handlePress,
     style: {
       position: "absolute",
       right: 50,
@@ -154,6 +168,9 @@ var index = {
         const channel = ChannelStore.getChannel(channelId);
         if (!channel)
           return originalHeader;
+        const hasDeleted = plugin.storage.deletedMessages[channelId]?.length > 0;
+        if (!hasDeleted)
+          return originalHeader;
         return /* @__PURE__ */ common.React.createElement(View, {
           style: {
             flex: 1
@@ -165,7 +182,7 @@ var index = {
     } else {
       _vendetta.logger.error("MessageLogger: Could not find ChannelHeader component");
     }
-    _vendetta.logger.log("MessageLogger v1.0.1 loaded.");
+    _vendetta.logger.log("MessageLogger v1.0.2 loaded.");
   },
   onUnload: function() {
     patches.forEach(function(p) {
@@ -174,4 +191,4 @@ var index = {
     patches.length = 0;
     _vendetta.logger.log("MessageLogger unloaded.");
   }
-};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro.common,vendetta.metro,vendetta,vendetta.plugin,vendetta.patcher,vendetta.ui.assets,vendetta.ui.components,vendetta.storage,vendetta.ui);
+};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro.common,vendetta.metro,vendetta,vendetta.plugin,vendetta.patcher,vendetta.ui.assets,vendetta.ui.components,vendetta.ui);
