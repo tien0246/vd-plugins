@@ -10,7 +10,7 @@ import swc from "@swc/core";
 
 const extensions = [".js", ".jsx", ".mjs", ".ts", ".tsx", ".cts", ".mts"];
 
-const pluginWebsite = "https://aliernfrog.github.io/vd-plugins";
+const pluginWebsite = "https://tien0246.github.io/vd-plugins";
 const sourceWebsite = "https://github.com/aliernfrog/vd-plugins/tree/master/plugins";
 const readmePlugins = [];
 

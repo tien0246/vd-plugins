@@ -1,0 +1,14 @@
+{
+    "name": "Hidden channels",
+    "description": "View the name and description of channels you can't access",
+    "authors": [
+        {
+            "name": "cloudburst",
+            "id": "892128204150685769"
+        }
+    ],
+    "main": "src/index.ts",
+    "vendetta": {
+        "icon": "ic_lock"
+    }
+}
