@@ -115,7 +115,7 @@ function onLoad() {
     } else {
       toasts.showToast("hidden-channels: Failed to find Fetcher module");
     }
-    const MessagesConnected = metro.findByName("MessagesWrapperConnected", false);
+    const MessagesConnected = metro.findByName("ChannelMessages", false);
     if (MessagesConnected) {
       patches.push(patcher.instead("default", MessagesConnected, function(args, orig) {
         const channel = args[0]?.channel;
