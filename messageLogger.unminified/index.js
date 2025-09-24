@@ -1,4 +1,4 @@
-(function(exports,common,metro,toasts,_vendetta,plugin,patcher,utils,assets,components,ui){'use strict';const { ScrollView, View, Text } = components.General;
+(function(exports,common,metro,toasts,_vendetta,plugin,patcher,assets,components,ui){'use strict';const { ScrollView, View, Text } = components.General;
 const { FormRow, FormDivider } = components.Forms;
 const ChannelStore$1 = metro.findByStoreName("ChannelStore");
 const styles = common.stylesheet.createThemedStyleSheet({
@@ -121,32 +121,21 @@ var index = {
     const ChannelHeader = metro.findByName("ChannelHeader", false);
     if (ChannelHeader) {
       patches.push(patcher.after("default", ChannelHeader, function(args, res) {
-        toasts.showToast("ML: CH patch running");
         const channelId = args[0]?.channelId;
         if (!channelId)
           return;
-        toasts.showToast(`ML: CH patch got channelId: ${channelId}`);
         const channel = ChannelStore.getChannel(channelId);
         if (!channel)
           return;
-        toasts.showToast(`ML: CH patch got channel: ${channel.name}`);
         const hasDeleted = plugin.storage.deletedMessages[channelId]?.length > 0;
-        toasts.showToast(`ML: CH patch hasDeleted: ${hasDeleted}`);
         if (!hasDeleted)
           return;
-        const title = utils.findInReactTree(res, function(r) {
-          return r?.type?.name === "HeaderTitle";
-        });
-        if (!title?.props?.children) {
-          toasts.showToast("ML: CH patch FAILED to find HeaderTitle");
+        const children = res?.props?.children;
+        if (!Array.isArray(children)) {
+          toasts.showToast("ML Error: Header children not an array");
           return;
         }
-        toasts.showToast("ML: CH patch found HeaderTitle");
-        if (!Array.isArray(title.props.children))
-          title.props.children = [
-            title.props.children
-          ];
-        title.props.children.push(/* @__PURE__ */ common.React.createElement(TouchableOpacity, {
+        children.push(/* @__PURE__ */ common.React.createElement(TouchableOpacity, {
           onPress: function() {
             Navigation.push("VendettaCustomPage", {
               title: `Deleted Msgs in #${channel.name}`,
@@ -158,12 +147,13 @@ var index = {
             });
           },
           style: {
-            marginLeft: 8
+            position: "absolute",
+            right: 12,
+            top: 12
           }
         }, /* @__PURE__ */ common.React.createElement(components.Forms.FormIcon, {
           source: assets.getAssetIDByName("ic_trash_24px")
         })));
-        toasts.showToast("ML: CH patch pushed button");
       }));
     } else {
       _vendetta.logger.error("MessageLogger: Could not find ChannelHeader component");
@@ -177,4 +167,4 @@ var index = {
     patches.length = 0;
     _vendetta.logger.log("MessageLogger unloaded.");
   }
-};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro.common,vendetta.metro,vendetta.ui.toasts,vendetta,vendetta.plugin,vendetta.patcher,vendetta.utils,vendetta.ui.assets,vendetta.ui.components,vendetta.ui);
+};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro.common,vendetta.metro,vendetta.ui.toasts,vendetta,vendetta.plugin,vendetta.patcher,vendetta.ui.assets,vendetta.ui.components,vendetta.ui);
