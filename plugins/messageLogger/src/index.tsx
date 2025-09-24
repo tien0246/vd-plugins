@@ -5,10 +5,13 @@ import { storage } from "@vendetta/plugin";
 import { instead } from "@vendetta/patcher";
 import { getAssetIDByName } from "@vendetta/ui/assets";
 import { Forms, General } from "@vendetta/ui/components";
-import { showDialog } from "../../../lib/ui/AlertDialog.tsx";
+import DeletedMessagesLog from "./DeletedMessagesLog.tsx";
 
 const { TouchableOpacity, View } = General;
 const ChannelStore = findByStoreName("ChannelStore");
+const Navigation = findByProps("push", "pushLazy", "pop");
+const Navigator = findByName("Navigator") ?? findByProps("Navigator")?.Navigator;
+const { getRenderCloseButton } = findByProps("getRenderCloseButton");
 
 const CACHE_EXPIRY_MS = 2 * 24 * 60 * 60 * 1000;
 
@@ -40,23 +43,23 @@ function cacheMessage(message) {
     };
 }
 
-// A dedicated component for the button to use hooks safely
 function TrashButton({ channelId, channelName }) {
+    const navigator = () => (
+        <Navigator
+            initialRouteName="DeletedMessagesLog"
+            screens={{
+                DeletedMessagesLog: {
+                    title: `Deleted Msgs in #${channelName}`,
+                    headerLeft: getRenderCloseButton(() => Navigation.pop()),
+                    render: () => <DeletedMessagesLog channelId={channelId} />,
+                }
+            }}
+        />
+    );
+
     return (
         <TouchableOpacity
-            onPress={() => {
-                const deletedMessages = storage.deletedMessages?.[channelId] ?? [];
-                const logContent = deletedMessages
-                    .slice(0, 10) // Show top 10
-                    .map(msg => `[${new Date(msg.deletedTimestamp).toLocaleTimeString()}] ${msg.author}: ${msg.content}`)
-                    .join('\n\n');
-
-                showDialog({
-                    title: `Deleted Msgs in #${channelName}`,
-                    content: logContent || "No deleted messages logged.",
-                    confirmText: "Close",
-                });
-            }}
+            onPress={() => Navigation.push(navigator)}
             style={{ position: 'absolute', right: 50, top: 13, zIndex: 1 }}
         >
             <Forms.FormIcon source={getAssetIDByName("ic_trash_24px")} />
