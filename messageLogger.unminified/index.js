@@ -1,29 +1,28 @@
-(function(exports,common,metro,_vendetta,plugin,patcher,assets,components){'use strict';const { View: View$1, Text } = common.ReactNative;
-function DeletedMessagesLog({ channelId }) {
-  return /* @__PURE__ */ common.React.createElement(View$1, {
-    style: {
-      flex: 1,
-      backgroundColor: "#1E1F22",
-      justifyContent: "center",
-      alignItems: "center"
-    }
-  }, /* @__PURE__ */ common.React.createElement(Text, {
-    style: {
-      color: "white",
-      fontSize: 18,
-      fontWeight: "bold"
-    }
-  }, "Hello from DeletedMessagesLog!"), /* @__PURE__ */ common.React.createElement(Text, {
-    style: {
-      color: "white",
-      marginTop: 8
-    }
-  }, "This is a test page."), /* @__PURE__ */ common.React.createElement(Text, {
-    style: {
-      color: "white",
-      marginTop: 8
-    }
-  }, "Channel ID: ", channelId));
+(function(exports,common,metro,_vendetta,plugin,patcher,assets,components,alerts){'use strict';const { openAlert } = metro.findByProps("openAlert", "dismissAlert");
+const { AlertModal, AlertActionButton } = metro.findByProps("AlertModal", "AlertActions");
+const { Stack, TextInput } = metro.findByProps("Stack");
+function showDialog(options) {
+  if (AlertModal && AlertActionButton)
+    showNewDialog(options);
+  else
+    alerts.showConfirmationAlert(options);
+}
+function showNewDialog({ title, content, placeholder, confirmText, cancelText, onConfirm }) {
+  openAlert(generateDialogKey(title), /* @__PURE__ */ React.createElement(AlertModal, {
+    title,
+    content,
+    actions: /* @__PURE__ */ React.createElement(Stack, null, /* @__PURE__ */ React.createElement(AlertActionButton, {
+      text: confirmText,
+      variant: "primary",
+      onPress: onConfirm
+    }), cancelText ? /* @__PURE__ */ React.createElement(AlertActionButton, {
+      text: cancelText,
+      variant: "secondary"
+    }) : /* @__PURE__ */ React.createElement(React.Fragment, null))
+  }));
+}
+function generateDialogKey(title) {
+  return `vdarnfg-${title?.toLowerCase?.().replaceAll?.(" ", "-")}`;
 }const { TouchableOpacity, View } = components.General;
 const ChannelStore = metro.findByStoreName("ChannelStore");
 const CACHE_EXPIRY_MS = 2 * 24 * 60 * 60 * 1e3;
@@ -54,16 +53,16 @@ function cacheMessage(message) {
   };
 }
 function TrashButton({ channelId, channelName }) {
-  const navigation = common.NavigationNative.useNavigation();
   return /* @__PURE__ */ common.React.createElement(TouchableOpacity, {
     onPress: function() {
-      navigation.push("VendettaCustomPage", {
+      const deletedMessages = plugin.storage.deletedMessages?.[channelId] ?? [];
+      const logContent = deletedMessages.slice(0, 10).map(function(msg) {
+        return `[${new Date(msg.deletedTimestamp).toLocaleTimeString()}] ${msg.author}: ${msg.content}`;
+      }).join("\n\n");
+      showDialog({
         title: `Deleted Msgs in #${channelName}`,
-        render: function() {
-          return /* @__PURE__ */ common.React.createElement(DeletedMessagesLog, {
-            channelId
-          });
-        }
+        content: logContent || "No deleted messages logged.",
+        confirmText: "Close"
       });
     },
     style: {
@@ -147,4 +146,4 @@ var index = {
     patches.length = 0;
     _vendetta.logger.log("MessageLogger unloaded.");
   }
-};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro.common,vendetta.metro,vendetta,vendetta.plugin,vendetta.patcher,vendetta.ui.assets,vendetta.ui.components);
+};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro.common,vendetta.metro,vendetta,vendetta.plugin,vendetta.patcher,vendetta.ui.assets,vendetta.ui.components,vendetta.ui.alerts);
