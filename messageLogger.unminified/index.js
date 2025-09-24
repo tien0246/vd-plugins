@@ -1,4 +1,4 @@
-(function(exports,common,metro,_vendetta,plugin,patcher,assets,components,ui){'use strict';const { ScrollView, View: View$1, Text } = components.General;
+(function(exports,common,metro,toasts,_vendetta,plugin,patcher,assets,components,ui){'use strict';const { ScrollView, View: View$1, Text } = components.General;
 const { FormRow, FormDivider } = components.Forms;
 const ChannelStore$1 = metro.findByStoreName("ChannelStore");
 const styles = common.stylesheet.createThemedStyleSheet({
@@ -132,6 +132,11 @@ var index = {
           return originalHeader;
         const trashButton = /* @__PURE__ */ common.React.createElement(TouchableOpacity, {
           onPress: function() {
+            if (!Navigation) {
+              toasts.showToast("ML Error: Navigation module not found!");
+              return;
+            }
+            toasts.showToast("ML: Opening deleted messages log...");
             Navigation.push("VendettaCustomPage", {
               title: `Deleted Msgs in #${channel.name}`,
               render: function() {
@@ -143,8 +148,8 @@ var index = {
           },
           style: {
             position: "absolute",
-            right: 50,
-            top: 12,
+            right: 16,
+            top: 13,
             zIndex: 1
           }
         }, /* @__PURE__ */ common.React.createElement(components.Forms.FormIcon, {
@@ -168,4 +173,4 @@ var index = {
     patches.length = 0;
     _vendetta.logger.log("MessageLogger unloaded.");
   }
-};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro.common,vendetta.metro,vendetta,vendetta.plugin,vendetta.patcher,vendetta.ui.assets,vendetta.ui.components,vendetta.ui);
+};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro.common,vendetta.metro,vendetta.ui.toasts,vendetta,vendetta.plugin,vendetta.patcher,vendetta.ui.assets,vendetta.ui.components,vendetta.ui);
