@@ -1,4 +1,4 @@
-(function(exports,common,metro,toasts,_vendetta,plugin,patcher,assets,components,ui){'use strict';const { ScrollView, View, Text } = components.General;
+(function(exports,common,metro,_vendetta,plugin,patcher,assets,components,ui){'use strict';const { ScrollView, View, Text } = components.General;
 const { FormRow, FormDivider } = components.Forms;
 const ChannelStore$1 = metro.findByStoreName("ChannelStore");
 const styles = common.stylesheet.createThemedStyleSheet({
@@ -130,12 +130,10 @@ var index = {
         const hasDeleted = plugin.storage.deletedMessages[channelId]?.length > 0;
         if (!hasDeleted)
           return;
-        const children = res?.props?.children;
-        if (!Array.isArray(children)) {
-          toasts.showToast("ML Error: Header children not an array");
+        const originalChildren = res?.props?.children;
+        if (!originalChildren)
           return;
-        }
-        children.push(/* @__PURE__ */ common.React.createElement(TouchableOpacity, {
+        const trashButton = /* @__PURE__ */ common.React.createElement(TouchableOpacity, {
           onPress: function() {
             Navigation.push("VendettaCustomPage", {
               title: `Deleted Msgs in #${channel.name}`,
@@ -149,11 +147,13 @@ var index = {
           style: {
             position: "absolute",
             right: 12,
-            top: 12
+            top: 12,
+            zIndex: 1
           }
         }, /* @__PURE__ */ common.React.createElement(components.Forms.FormIcon, {
           source: assets.getAssetIDByName("ic_trash_24px")
-        })));
+        }));
+        res.props.children = /* @__PURE__ */ common.React.createElement(common.React.Fragment, null, originalChildren, trashButton);
       }));
     } else {
       _vendetta.logger.error("MessageLogger: Could not find ChannelHeader component");
@@ -167,4 +167,4 @@ var index = {
     patches.length = 0;
     _vendetta.logger.log("MessageLogger unloaded.");
   }
-};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro.common,vendetta.metro,vendetta.ui.toasts,vendetta,vendetta.plugin,vendetta.patcher,vendetta.ui.assets,vendetta.ui.components,vendetta.ui);
+};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro.common,vendetta.metro,vendetta,vendetta.plugin,vendetta.patcher,vendetta.ui.assets,vendetta.ui.components,vendetta.ui);
