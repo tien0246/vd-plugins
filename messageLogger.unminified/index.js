@@ -1,6 +1,7 @@
 (function(exports,common,metro,_vendetta,plugin,patcher,assets,components,ui){'use strict';const { ScrollView, View: View$1, Text } = common.ReactNative;
 const { FormDivider } = components.Forms;
 const ChannelStore$1 = metro.findByStoreName("ChannelStore");
+const Parser = metro.findByProps("parse", "parseTopic");
 const styles$1 = common.stylesheet.createThemedStyleSheet({
   container: {
     flex: 1,
@@ -14,9 +15,7 @@ const styles$1 = common.stylesheet.createThemedStyleSheet({
     fontWeight: "bold",
     marginBottom: 4
   },
-  content: {
-    color: ui.semanticColors.TEXT_NORMAL
-  },
+  contentContainer: {},
   timestamp: {
     color: ui.semanticColors.TEXT_MUTED,
     fontSize: 12,
@@ -40,9 +39,11 @@ function DeletedMessagesLog({ channelId }) {
       style: styles$1.logEntry
     }, /* @__PURE__ */ common.React.createElement(Text, {
       style: styles$1.author
-    }, msg.author), /* @__PURE__ */ common.React.createElement(Text, {
-      style: styles$1.content
-    }, msg.content), /* @__PURE__ */ common.React.createElement(Text, {
+    }, msg.author), /* @__PURE__ */ common.React.createElement(View$1, {
+      style: styles$1.contentContainer
+    }, Parser.parse(msg.content, true, {
+      channelId
+    })), /* @__PURE__ */ common.React.createElement(Text, {
       style: styles$1.timestamp
     }, "Deleted at: ", new Date(msg.deletedTimestamp).toLocaleString())), /* @__PURE__ */ common.React.createElement(FormDivider, null));
   }) : /* @__PURE__ */ common.React.createElement(Text, {
