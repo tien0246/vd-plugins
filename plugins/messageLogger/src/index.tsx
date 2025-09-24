@@ -76,10 +76,12 @@ export default {
         const ChannelHeader = findByName("ChannelHeader", false);
         if (ChannelHeader) {
             patches.push(after("default", ChannelHeader, (args, res) => {
+                // Log the keys of the first props object to find the channel prop
+                const propsKeys = Object.keys(args[0] ?? {}).join(', ');
+                showToast(`CH Props keys: ${propsKeys}`);
+
                 const channel = args[0]?.channel;
                 if (!channel) return;
-
-                showToast("Patching Channel Header for MessageLogger UI...", 1);
 
                 const channelId = channel.id;
                 const hasDeleted = storage.deletedMessages[channelId]?.length > 0;
