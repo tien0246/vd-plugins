@@ -1,4 +1,4 @@
-(function(exports,common,metro,toasts,_vendetta,plugin,patcher,components,alerts){'use strict';metro.findByProps("openLazy", "hideActionSheet");
+(function(exports,common,metro,toasts,_vendetta,plugin,patcher,utils,components,alerts){'use strict';metro.findByProps("openLazy", "hideActionSheet");
 metro.findByProps("ActionSheetRow");
 metro.findByProps("push", "pop");
 metro.findByStoreName("ChannelStore");
@@ -29,25 +29,7 @@ function cacheMessage(message) {
     editHistory: existingData?.editHistory ?? []
   };
 }
-function getComponentTree(node, depth = 0) {
-  if (!node || depth > 15)
-    return "";
-  let tree = "";
-  const indent = "  ".repeat(depth);
-  const name = node.type?.displayName ?? node.type?.name ?? node.type ?? "[unknown]";
-  tree += `${indent}${name}
-`;
-  if (node.props?.children) {
-    const children = Array.isArray(node.props.children) ? node.props.children : [
-      node.props.children
-    ];
-    for (const child of children) {
-      tree += getComponentTree(child, depth + 1);
-    }
-  }
-  return tree;
-}
-let hasShownTree = false;
+let hasShownAlert = false;
 var index = {
   onLoad: function() {
     pruneCache();
@@ -89,19 +71,27 @@ var index = {
     if (ChannelHeader) {
       patches.push(patcher.after("default", ChannelHeader, function(args, res) {
         const channelId = args[0]?.channelId;
-        if (!channelId || hasShownTree)
+        if (!channelId || hasShownAlert)
           return;
         const hasDeleted = plugin.storage.deletedMessages[channelId]?.length > 0;
         if (!hasDeleted)
           return;
-        hasShownTree = true;
-        const treeString = getComponentTree(res);
+        hasShownAlert = true;
+        const components = /* @__PURE__ */ new Set();
+        utils.findInReactTree(res, function(node) {
+          const name = node?.type?.name;
+          if (typeof name === "string") {
+            components.add(name);
+          }
+          return false;
+        });
+        const componentsString = Array.from(components).join("\n");
         alerts.showConfirmationAlert({
-          title: "ChannelHeader Tree",
-          content: treeString,
+          title: "Component Names",
+          content: componentsString || "No named components found.",
           confirmText: "Copy",
           onConfirm: function() {
-            common.clipboard.setString(treeString);
+            common.clipboard.setString(componentsString);
             toasts.showToast("Copied to clipboard.");
           },
           cancelText: "Close"
@@ -117,7 +107,7 @@ var index = {
       return p?.();
     });
     patches.length = 0;
-    hasShownTree = false;
+    hasShownAlert = false;
     _vendetta.logger.log("MessageLogger unloaded.");
   }
-};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro.common,vendetta.metro,vendetta.ui.toasts,vendetta,vendetta.plugin,vendetta.patcher,vendetta.ui.components,vendetta.ui.alerts);
+};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro.common,vendetta.metro,vendetta.ui.toasts,vendetta,vendetta.plugin,vendetta.patcher,vendetta.utils,vendetta.ui.components,vendetta.ui.alerts);
