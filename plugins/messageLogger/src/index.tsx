@@ -1,12 +1,11 @@
-import { FluxDispatcher, React, ReactNative, NavigationNative } from "@vendetta/metro/common";
+import { FluxDispatcher, React, ReactNative } from "@vendetta/metro/common";
 import { findByProps, findByName, findByStoreName } from "@vendetta/metro";
-import { showToast } from "@vendetta/ui/toasts";
 import { logger } from "@vendetta";
 import { storage } from "@vendetta/plugin";
-import { after, instead } from "@vendetta/patcher";
+import { instead } from "@vendetta/patcher";
 import { getAssetIDByName } from "@vendetta/ui/assets";
 import { Forms, General } from "@vendetta/ui/components";
-import DeletedMessagesLog from "./DeletedMessagesLog.tsx";
+import { showDialog } from "../../lib/ui/AlertDialog.tsx";
 
 const { TouchableOpacity, View } = General;
 const ChannelStore = findByStoreName("ChannelStore");
@@ -43,13 +42,19 @@ function cacheMessage(message) {
 
 // A dedicated component for the button to use hooks safely
 function TrashButton({ channelId, channelName }) {
-    const navigation = NavigationNative.useNavigation();
     return (
         <TouchableOpacity
             onPress={() => {
-                navigation.push("VendettaCustomPage", {
+                const deletedMessages = storage.deletedMessages?.[channelId] ?? [];
+                const logContent = deletedMessages
+                    .slice(0, 10) // Show top 10
+                    .map(msg => `[${new Date(msg.deletedTimestamp).toLocaleTimeString()}] ${msg.author}: ${msg.content}`)
+                    .join('\n\n');
+
+                showDialog({
                     title: `Deleted Msgs in #${channelName}`,
-                    render: () => <DeletedMessagesLog channelId={channelId} />,
+                    content: logContent || "No deleted messages logged.",
+                    confirmText: "Close",
                 });
             }}
             style={{ position: 'absolute', right: 50, top: 13, zIndex: 1 }}
