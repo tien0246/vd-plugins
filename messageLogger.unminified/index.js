@@ -126,8 +126,8 @@ function TrashButton({ channel }) {
     onPress: handlePress,
     style: {
       position: "absolute",
-      right: 50,
-      top: 8,
+      right: 16,
+      top: 18,
       zIndex: 1
     }
   }, /* @__PURE__ */ common.React.createElement(View, {
