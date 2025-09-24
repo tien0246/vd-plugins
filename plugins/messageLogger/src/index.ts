@@ -21,15 +21,7 @@ export default {
             if (action.type !== "MESSAGE_DELETE") return;
 
             try {
-                const message = MessageStore.getMessage(action.channelId, action.id);
-                if (message && message.content) {
-                    const author = message.author?.username ?? "unknown";
-                    showToast(`Deleted from ${author}: ${message.content}`);
-                } else if (message) {
-                    showToast(`ML: Deleted msg [${action.id}] has no text content.`);
-                } else {
-                    showToast(`ML: Deleted msg [${action.id}] not in cache.`);
-                }
+                showToast(JSON.stringify(action));
             } catch (e) {
                 logger.error("MessageLogger: Error in MESSAGE_DELETE", e);
                 showToast(`ML Error: ${e.message}`);
