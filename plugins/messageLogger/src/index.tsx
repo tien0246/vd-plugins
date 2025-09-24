@@ -23,7 +23,6 @@ storage.deletedMessages ??= {};
 
 const patches = [];
 
-// ... (pruneCache and cacheMessage functions remain the same)
 function pruneCache() {
     const now = Date.now();
     Object.keys(storage.messageCache).forEach(id => {
@@ -47,30 +46,12 @@ function cacheMessage(message) {
     };
 }
 
-// Function to log the component tree
-function getComponentTree(node, depth = 0) {
-    if (!node || depth > 15) return "";
-    let tree = "";
-    const indent = "  ".repeat(depth);
-    const name = node.type?.displayName ?? node.type?.name ?? node.type ?? "[unknown]";
-    tree += `${indent}${name}\n`;
-
-    if (node.props?.children) {
-        const children = Array.isArray(node.props.children) ? node.props.children : [node.props.children];
-        for (const child of children) {
-            tree += getComponentTree(child, depth + 1);
-        }
-    }
-    return tree;
-}
-
-let hasShownTree = false;
+let hasShownAlert = false;
 
 export default {
     onLoad: () => {
         pruneCache();
 
-        // ... (message event subscriptions remain the same)
         patches.push(FluxDispatcher.subscribe("MESSAGE_CREATE", ({ message }) => cacheMessage(message)));
         patches.push(FluxDispatcher.subscribe("MESSAGE_UPDATE", ({ message: u }) => {
             const old = storage.messageCache[u.id];
@@ -90,24 +71,35 @@ export default {
             }
         }));
 
-        // Patch Channel Header to log its structure
+        // Patch Channel Header to log its component names
         const ChannelHeader = findByName("ChannelHeader", false);
         if (ChannelHeader) {
             patches.push(after("default", ChannelHeader, (args, res) => {
                 const channelId = args[0]?.channelId;
-                if (!channelId || hasShownTree) return;
+                if (!channelId || hasShownAlert) return;
 
                 const hasDeleted = storage.deletedMessages[channelId]?.length > 0;
                 if (!hasDeleted) return;
 
-                hasShownTree = true; // Show the alert only once
-                const treeString = getComponentTree(res);
+                hasShownAlert = true; // Show the alert only once per session
+                
+                const components = new Set();
+                findInReactTree(res, (node) => {
+                    const name = node?.type?.name;
+                    if (typeof name === 'string') {
+                        components.add(name);
+                    }
+                    return false; // Continue traversal
+                });
+
+                const componentsString = Array.from(components).join('\n');
+
                 showConfirmationAlert({
-                    title: "ChannelHeader Tree",
-                    content: treeString,
+                    title: "Component Names",
+                    content: componentsString || "No named components found.",
                     confirmText: "Copy",
                     onConfirm: () => {
-                        clipboard.setString(treeString);
+                        clipboard.setString(componentsString);
                         showToast("Copied to clipboard.");
                     },
                     cancelText: "Close",
@@ -122,7 +114,7 @@ export default {
     onUnload: () => {
         patches.forEach(p => p?.());
         patches.length = 0;
-        hasShownTree = false;
+        hasShownAlert = false;
         logger.log("MessageLogger unloaded.");
     }
 };
