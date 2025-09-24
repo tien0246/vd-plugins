@@ -5,13 +5,14 @@ import { storage } from "@vendetta/plugin";
 import { instead } from "@vendetta/patcher";
 import { getAssetIDByName } from "@vendetta/ui/assets";
 import { Forms, General } from "@vendetta/ui/components";
+import { showToast } from "@vendetta/ui/toasts";
 import DeletedMessagesLog from "./DeletedMessagesLog.tsx";
 
 const { TouchableOpacity, View } = General;
 const ChannelStore = findByStoreName("ChannelStore");
-const Navigation = findByProps("push", "pushLazy", "pop");
-const Navigator = findByName("Navigator") ?? findByProps("Navigator")?.Navigator;
-const { getRenderCloseButton } = findByProps("getRenderCloseButton");
+
+// Lazy load navigation modules
+let Navigation, Navigator, getRenderCloseButton;
 
 const CACHE_EXPIRY_MS = 2 * 24 * 60 * 60 * 1000;
 
@@ -44,22 +45,34 @@ function cacheMessage(message) {
 }
 
 function TrashButton({ channelId, channelName }) {
-    const navigator = () => (
-        <Navigator
-            initialRouteName="DeletedMessagesLog"
-            screens={{
-                DeletedMessagesLog: {
-                    title: `Deleted Msgs in #${channelName}`,
-                    headerLeft: getRenderCloseButton(() => Navigation.pop()),
-                    render: () => <DeletedMessagesLog channelId={channelId} />,
-                }
-            }}
-        />
-    );
+    // Find modules only when the component is rendered
+    Navigation ??= findByProps("push", "pushLazy", "pop");
+    Navigator ??= findByName("Navigator") ?? findByProps("Navigator")?.Navigator;
+    getRenderCloseButton ??= findByProps("getRenderCloseButton")?.getRenderCloseButton;
+
+    const handlePress = () => {
+        if (!Navigation || !Navigator || !getRenderCloseButton) {
+            return showToast("Failed to get navigation modules.");
+        }
+
+        const navigator = () => (
+            <Navigator
+                initialRouteName="DeletedMessagesLog"
+                screens={{
+                    DeletedMessagesLog: {
+                        title: `Deleted Msgs in #${channelName}`,
+                        headerLeft: getRenderCloseButton(() => Navigation.pop()),
+                        render: () => <DeletedMessagesLog channelId={channelId} />,
+                    }
+                }}
+            />
+        );
+        Navigation.push(navigator);
+    };
 
     return (
         <TouchableOpacity
-            onPress={() => Navigation.push(navigator)}
+            onPress={handlePress}
             style={{ position: 'absolute', right: 50, top: 13, zIndex: 1 }}
         >
             <Forms.FormIcon source={getAssetIDByName("ic_trash_24px")} />
