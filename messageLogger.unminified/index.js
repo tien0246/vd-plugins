@@ -12,15 +12,7 @@ var index = {
       if (action.type !== "MESSAGE_DELETE")
         return;
       try {
-        const message = MessageStore.getMessage(action.channelId, action.id);
-        if (message && message.content) {
-          const author = message.author?.username ?? "unknown";
-          toasts.showToast(`Deleted from ${author}: ${message.content}`);
-        } else if (message) {
-          toasts.showToast(`ML: Deleted msg [${action.id}] has no text content.`);
-        } else {
-          toasts.showToast(`ML: Deleted msg [${action.id}] not in cache.`);
-        }
+        toasts.showToast(JSON.stringify(action));
       } catch (e) {
         _vendetta.logger.error("MessageLogger: Error in MESSAGE_DELETE", e);
         toasts.showToast(`ML Error: ${e.message}`);
