@@ -60,7 +60,7 @@ function onLoad() {
             showToast("hidden-channels: Failed to find Fetcher module");
         }
 
-        const MessagesConnected = findByName("MessagesWrapperConnected", false);
+        const MessagesConnected = findByName("ChannelMessages", false);
         if (MessagesConnected) {
             patches.push(instead("default", MessagesConnected, (args, orig) => {
                 const channel = args[0]?.channel;
