@@ -68,7 +68,7 @@ View raw message data
 
 ## [Hidden channels](https://tien0246.github.io/vd-plugins/hidden-channels)
 
-View the name and description of channels you can't access (v1)
+View the name and description of channels you can't access (v2)
 
 **Status:** ⛱️ Stable
 
