@@ -7,21 +7,29 @@ let unpatch;
 
 export default {
     onLoad: () => {
-        showToast("MessageLogger: onLoad called (v1)");
+        showToast("MessageLogger: onLoad called (v2)");
         logger.log("MessageLogger loaded.");
         const MessageStore = findByStoreName("MessageStore");
 
+        if (!MessageStore) {
+            showToast("ML Error: Could not find MessageStore!");
+            return;
+        }
+
         // Subscribe to the MESSAGE_DELETE action
         unpatch = FluxDispatcher.subscribe("MESSAGE_DELETE", (action) => {
+            showToast("ML: MESSAGE_DELETE received!");
             try {
-                // This action is dispatched *before* the message is removed from the store
                 const message = MessageStore.getMessage(action.channelId, action.id);
                 if (message && message.content) {
                     const author = message.author?.username ?? "unknown";
                     showToast(`Deleted from ${author}: ${message.content}`);
+                } else {
+                    showToast(`ML: Deleted msg [${action.id}] not in cache or has no content.`);
                 }
             } catch (e) {
                 logger.error("MessageLogger: Error in MESSAGE_DELETE", e);
+                showToast(`ML Error: ${e.message}`);
             }
         });
     },

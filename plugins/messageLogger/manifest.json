@@ -1,6 +1,6 @@
 {
   "name": "MessageLogger",
-  "description": "Logs deleted and edited messages. (Ported from Vencord) (v1)",
+  "description": "Logs deleted and edited messages. (Ported from Vencord) (v2)",
   "authors": [
     {
       "name": "tien0246",
