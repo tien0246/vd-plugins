@@ -48,9 +48,9 @@ export default function DeletedMessagesLog({ channelId }: { channelId: string })
                     <React.Fragment key={msg.id + index}>
                         <View style={styles.logEntry}>
                             <Text style={styles.author}>{msg.author}</Text>
-                            <View style={styles.contentContainer}>
+                            <Text style={styles.contentContainer}>
                                 {Parser.parse(msg.content, true, { channelId: channelId })}
-                            </View>
+                            </Text>
                             <Text style={styles.timestamp}>
                                 Deleted at: {new Date(msg.deletedTimestamp).toLocaleString()}
                             </Text>

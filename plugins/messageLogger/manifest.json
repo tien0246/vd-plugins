@@ -12,7 +12,7 @@
     }
   ],
   "main": "src/index.tsx",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "vendetta": {
     "icon": "ic_audit_log_24px"
   }
