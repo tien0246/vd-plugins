@@ -77,17 +77,25 @@ export default {
         const ChannelHeader = findByName("ChannelHeader", false);
         if (ChannelHeader) {
             patches.push(after("default", ChannelHeader, (args, res) => {
+                showToast("ML: CH patch running");
                 const channelId = args[0]?.channelId;
                 if (!channelId) return;
+                showToast(`ML: CH patch got channelId: ${channelId}`);
 
                 const channel = ChannelStore.getChannel(channelId);
                 if (!channel) return;
+                showToast(`ML: CH patch got channel: ${channel.name}`);
 
                 const hasDeleted = storage.deletedMessages[channelId]?.length > 0;
+                showToast(`ML: CH patch hasDeleted: ${hasDeleted}`);
                 if (!hasDeleted) return;
 
                 const title = findInReactTree(res, r => r?.type?.name === "HeaderTitle");
-                if (!title?.props?.children) return;
+                if (!title?.props?.children) {
+                    showToast("ML: CH patch FAILED to find HeaderTitle");
+                    return;
+                }
+                showToast("ML: CH patch found HeaderTitle");
 
                 if (!Array.isArray(title.props.children)) title.props.children = [title.props.children];
                 
@@ -105,6 +113,7 @@ export default {
                         <Forms.FormIcon source={getAssetIDByName("ic_trash_24px")} />
                     </TouchableOpacity>
                 );
+                showToast("ML: CH patch pushed button");
             }));
         } else {
             logger.error("MessageLogger: Could not find ChannelHeader component");
