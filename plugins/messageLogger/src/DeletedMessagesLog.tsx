@@ -1,5 +1,5 @@
 import { React, ReactNative, stylesheet } from "@vendetta/metro/common";
-import { findByStoreName } from "@vendetta/metro";
+import { findByStoreName, findByProps } from "@vendetta/metro";
 import { storage } from "@vendetta/plugin";
 import { Forms, General } from "@vendetta/ui/components";
 import { semanticColors } from "@vendetta/ui";
@@ -7,6 +7,7 @@ import { semanticColors } from "@vendetta/ui";
 const { ScrollView, View, Text } = ReactNative;
 const { FormDivider } = Forms;
 const ChannelStore = findByStoreName("ChannelStore");
+const Parser = findByProps("parse", "parseTopic");
 
 const styles = stylesheet.createThemedStyleSheet({
     container: {
@@ -21,8 +22,8 @@ const styles = stylesheet.createThemedStyleSheet({
         fontWeight: "bold",
         marginBottom: 4,
     },
-    content: {
-        color: semanticColors.TEXT_NORMAL,
+    contentContainer: {
+        // The parser will apply its own text styles
     },
     timestamp: {
         color: semanticColors.TEXT_MUTED,
@@ -47,7 +48,9 @@ export default function DeletedMessagesLog({ channelId }: { channelId: string })
                     <React.Fragment key={msg.id + index}>
                         <View style={styles.logEntry}>
                             <Text style={styles.author}>{msg.author}</Text>
-                            <Text style={styles.content}>{msg.content}</Text>
+                            <View style={styles.contentContainer}>
+                                {Parser.parse(msg.content, true, { channelId: channelId })}
+                            </View>
                             <Text style={styles.timestamp}>
                                 Deleted at: {new Date(msg.deletedTimestamp).toLocaleString()}
                             </Text>
