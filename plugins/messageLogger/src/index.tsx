@@ -1,19 +1,14 @@
-import { FluxDispatcher, React, ReactNative, clipboard } from "@vendetta/metro/common";
+import { FluxDispatcher, React, ReactNative, NavigationNative } from "@vendetta/metro/common";
 import { findByProps, findByName, findByStoreName } from "@vendetta/metro";
 import { showToast } from "@vendetta/ui/toasts";
 import { logger } from "@vendetta";
 import { storage } from "@vendetta/plugin";
-import { after, before, instead } from "@vendetta/patcher";
-import { findInReactTree } from "@vendetta/utils";
+import { after, instead } from "@vendetta/patcher";
 import { getAssetIDByName } from "@vendetta/ui/assets";
 import { Forms, General } from "@vendetta/ui/components";
-import { showConfirmationAlert } from "@vendetta/ui/alerts";
 import DeletedMessagesLog from "./DeletedMessagesLog.tsx";
 
 const { TouchableOpacity, View } = General;
-const ActionSheet = findByProps("openLazy", "hideActionSheet");
-const { ActionSheetRow } = findByProps("ActionSheetRow");
-const Navigation = findByProps("push", "pop");
 const ChannelStore = findByStoreName("ChannelStore");
 
 const CACHE_EXPIRY_MS = 2 * 24 * 60 * 60 * 1000;
@@ -46,6 +41,24 @@ function cacheMessage(message) {
     };
 }
 
+// A dedicated component for the button to use hooks safely
+function TrashButton({ channelId, channelName }) {
+    const navigation = NavigationNative.useNavigation();
+    return (
+        <TouchableOpacity
+            onPress={() => {
+                navigation.push("VendettaCustomPage", {
+                    title: `Deleted Msgs in #${channelName}`,
+                    render: () => <DeletedMessagesLog channelId={channelId} />,
+                });
+            }}
+            style={{ position: 'absolute', right: 50, top: 13, zIndex: 1 }}
+        >
+            <Forms.FormIcon source={getAssetIDByName("ic_trash_24px")} />
+        </TouchableOpacity>
+    );
+}
+
 export default {
     onLoad: () => {
         pruneCache();
@@ -69,7 +82,6 @@ export default {
             }
         }));
 
-        // Patch Channel Header using component wrapping
         const ChannelHeader = findByName("ChannelHeader", false);
         if (ChannelHeader) {
             patches.push(instead("default", ChannelHeader, (args, orig) => {
@@ -83,29 +95,10 @@ export default {
                 const hasDeleted = storage.deletedMessages[channelId]?.length > 0;
                 if (!hasDeleted) return originalHeader;
 
-                const trashButton = (
-                    <TouchableOpacity
-                        onPress={() => {
-                            if (!Navigation) {
-                                showToast("ML Error: Navigation module not found!");
-                                return;
-                            }
-                            showToast("ML: Opening deleted messages log...");
-                            Navigation.push("VendettaCustomPage", {
-                                title: `Deleted Msgs in #${channel.name}`,
-                                render: () => <DeletedMessagesLog channelId={channelId} />,
-                            });
-                        }}
-                        style={{ position: 'absolute', right: 16, top: 16, zIndex: 1 }}
-                    >
-                        <Forms.FormIcon source={getAssetIDByName("ic_trash_24px")} />
-                    </TouchableOpacity>
-                );
-
                 return (
                     <View style={{ flex: 1 }}>
                         {originalHeader}
-                        {trashButton}
+                        <TrashButton channelId={channelId} channelName={channel.name} />
                     </View>
                 );
             }));
