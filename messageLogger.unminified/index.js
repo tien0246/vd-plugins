@@ -1,4 +1,4 @@
-(function(exports,common,metro,toasts,_vendetta,plugin,patcher,utils,components,alerts){'use strict';metro.findByProps("openLazy", "hideActionSheet");
+(function(exports,common,metro,toasts,_vendetta,plugin,patcher,components,alerts){'use strict';metro.findByProps("openLazy", "hideActionSheet");
 metro.findByProps("ActionSheetRow");
 metro.findByProps("push", "pop");
 metro.findByStoreName("ChannelStore");
@@ -77,20 +77,27 @@ var index = {
         if (!hasDeleted)
           return;
         hasShownAlert = true;
+        const children = res?.props?.children;
+        if (!children) {
+          toasts.showToast("No children found in ChannelHeader");
+          return;
+        }
+        const childrenArray = Array.isArray(children) ? children : [
+          children
+        ];
         const propsSet = /* @__PURE__ */ new Set();
-        utils.findInReactTree(res, function(node) {
-          if (node?.props) {
-            const keys = Object.keys(node.props);
+        for (const child of childrenArray) {
+          if (child?.props) {
+            const keys = Object.keys(child.props);
             if (keys.length > 0) {
               propsSet.add(`[${keys.join(", ")}]`);
             }
           }
-          return false;
-        });
+        }
         const propsString = Array.from(propsSet).join("\n");
         alerts.showConfirmationAlert({
-          title: "Component Prop Keys",
-          content: propsString || "No components with props found.",
+          title: "Second Level Prop Keys",
+          content: propsString || "No 2nd-level components with props found.",
           confirmText: "Copy",
           onConfirm: function() {
             common.clipboard.setString(propsString);
@@ -112,4 +119,4 @@ var index = {
     hasShownAlert = false;
     _vendetta.logger.log("MessageLogger unloaded.");
   }
-};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro.common,vendetta.metro,vendetta.ui.toasts,vendetta,vendetta.plugin,vendetta.patcher,vendetta.utils,vendetta.ui.components,vendetta.ui.alerts);
+};exports.default=index;Object.defineProperty(exports,'__esModule',{value:true});return exports;})({},vendetta.metro.common,vendetta.metro,vendetta.ui.toasts,vendetta,vendetta.plugin,vendetta.patcher,vendetta.ui.components,vendetta.ui.alerts);
